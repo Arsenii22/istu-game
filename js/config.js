@@ -56,7 +56,7 @@ window.CONFIG = {
     viewerTitle: 'Просмотр фотографии',
     toAlbum: 'К альбому',
     allPhotos: 'Все фото выпуска',
-    institute: 'Институт',
+    direction: 'Направление',
     photoPrev: 'Предыдущее фото',
     photoNext: 'Следующее фото',
 

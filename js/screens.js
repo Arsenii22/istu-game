@@ -40,6 +40,26 @@ window.Screens = (function () {
     return forms[2];
   }
 
+  /* Направление в галерее и отзывах должно дословно совпадать с title в js/data/history.js.
+     Опечатка не ломает игру, поэтому только предупреждаем в консоли. */
+  function checkDirections() {
+    var known = window.HISTORY_DATA.branches.map(function (b) { return b.title; });
+
+    function check(name, place) {
+      if (known.indexOf(name) >= 0) return;
+      console.warn('Направления нет в js/data/history.js: «' + name + '» (' + place + ')');
+    }
+
+    window.GALLERY_DATA.forEach(function (y) {
+      y.photos.forEach(function (p, i) {
+        check(p.direction, 'js/data/gallery.js, ' + y.year + ', фото ' + (i + 1));
+      });
+    });
+    window.REVIEWS_DATA.forEach(function (r, i) {
+      check(r.direction, 'js/data/reviews.js, отзыв ' + (i + 1));
+    });
+  }
+
   function clone(tplId) {
     var frag = document.getElementById(tplId).content.cloneNode(true);
     fill(frag);
@@ -227,6 +247,7 @@ window.Screens = (function () {
     parallax: parallax,
     show: show,
     clone: clone,
+    checkDirections: checkDirections,
     plural: plural,
     currentScreen: function () { return current; },
     setProgress: setProgress,

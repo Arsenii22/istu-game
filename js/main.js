@@ -184,6 +184,7 @@
     requestAnimationFrame(tick);
   }
 
+  S.checkDirections();
   S.applyLayout();
   S.buildBackground();
   show('loading');

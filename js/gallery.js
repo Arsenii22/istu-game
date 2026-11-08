@@ -229,7 +229,7 @@ window.Gallery = (function () {
     v.querySelector('#viewer-num').textContent = pad(view.index + 1) + ' / ' + pad(y.photos.length);
     v.querySelector('#viewer-name').textContent = T.photoStub + ' ' + y.year;
     v.querySelector('#viewer-caption').textContent = photo.caption;
-    v.querySelector('#viewer-institute').textContent = photo.institute;
+    v.querySelector('#viewer-direction').textContent = photo.direction;
 
     var frame = v.querySelector('#viewer-frame');
     frame.className = 'viewer__frame';
