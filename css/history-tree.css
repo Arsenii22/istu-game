@@ -339,6 +339,39 @@
 .tree-link:hover{border-color:var(--c-blue);box-shadow:0 0 0 3px var(--c-glow)}
 .tree-link[hidden]{display:none}
 
+/* Блоки на всю ширину под карточками ветки */
+.tree-focus__wide{grid-column:1 / -1}
+
+.tree-today{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:12px;
+  padding:24px 26px;
+  border:1.5px solid var(--c-line);
+  border-left:6px solid var(--b);
+  border-radius:16px;
+  background:var(--c-surface);
+  animation:pp-in .4s ease-out both;
+}
+.tree-today__label{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--c-teal)}
+.tree-today__text{margin:0;font-size:17px;line-height:1.5;font-weight:500;text-wrap:pretty}
+.tree-today__link{
+  height:46px;
+  display:inline-flex;
+  align-items:center;
+  padding:0 24px;
+  border-radius:10px;
+  background:var(--c-blue);
+  color:var(--c-surface);
+  font-size:16px;
+  font-weight:700;
+  text-decoration:none;
+  transition:background .16s ease, box-shadow .16s ease;
+}
+.tree-today__link:hover{background:var(--c-blue-deep);box-shadow:0 0 0 4px var(--c-glow)}
+.tree-today__link[hidden]{display:none}
+
 /* Возврат из другого раздела: дерево и карточки уже на месте, без анимации появления. */
 .tree-canvas.is-static *,
 .tree-focus.is-static *{animation:none}

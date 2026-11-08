@@ -149,7 +149,7 @@
   });
 
   /* mouseover, в отличие от mouseenter, всплывает; отсеиваем перемещения внутри кнопки. */
-  var HOVER_SELECTOR = '.mode, #btn-back, #btn-about, #btn-about-ok, .chip, .round, .viewer__all, .pair__btn, .btn-write, .feed__more-btn, .rform__submit, .thanks__primary, .thanks__again, .tree-stage, .tree-label, .tree-card__row, .tree-focus__nav, .tree-detail__thumb, .tree-link';
+  var HOVER_SELECTOR = '.mode, #btn-back, #btn-about, #btn-about-ok, .chip, .round, .viewer__all, .pair__btn, .btn-write, .feed__more-btn, .rform__submit, .thanks__primary, .thanks__again, .tree-stage, .tree-label, .tree-card__row, .tree-focus__nav, .tree-detail__thumb, .tree-link, .tree-today__link';
   document.addEventListener('mouseover', function (e) {
     var el = e.target.closest(HOVER_SELECTOR);
     if (!el) return;

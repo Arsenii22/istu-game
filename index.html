@@ -481,6 +481,15 @@
   </div>
 </template>
 
+<!-- Блок «Сегодня»: поле today направления в js/data/history.js. -->
+<template id="tpl-tree-today">
+  <section class="tree-today tree-focus__wide">
+    <span class="tree-today__label" data-text="treeToday"></span>
+    <p class="tree-today__text" data-slot="text"></p>
+    <a class="tree-today__link" data-slot="link" target="_blank" rel="noopener" data-text="treeApply"></a>
+  </section>
+</template>
+
 <template id="tpl-tree-photo">
   <div class="tree-photo" id="tree-photo">
     <button class="tree-card__close tree-photo__close" type="button" data-alt-text="treeCardClose">

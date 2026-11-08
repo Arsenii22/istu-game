@@ -78,6 +78,8 @@ window.CONFIG = {
     treeLinkGallery: 'Выпуски',
     treeLinkMuseum: 'Музей',
     toBranch: 'К ветке',
+    treeToday: 'Сегодня',
+    treeApply: 'Поступить',
     eventForms: ['событие', 'события', 'событий'],
 
 

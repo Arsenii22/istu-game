@@ -491,6 +491,20 @@ window.HistoryTree = (function () {
     return frag;
   }
 
+  /* Блок «Сегодня»: без text его нет, без link нет кнопки. */
+  function todayBlock(b, order) {
+    var today = b.today || {};
+    if (!today.text) return null;
+
+    var frag = Screens.clone('tpl-tree-today');
+    frag.firstElementChild.style.animationDelay = 0.35 + 0.05 * order.n++ + 's';
+    frag.querySelector('[data-slot="text"]').textContent = today.text;
+    var link = frag.querySelector('[data-slot="link"]');
+    link.hidden = !today.link;
+    if (today.link) link.href = today.link;
+    return frag.firstElementChild;
+  }
+
   function renderFocus() {
     var branches = window.HISTORY_DATA.branches;
     var n = branches.length;
@@ -521,6 +535,10 @@ window.HistoryTree = (function () {
       subs.forEach(function (sb) { side.appendChild(focusCard(sb.title, sb.items, true, order)); });
       cols.push(side);
     }
+
+    var today = todayBlock(b, order);
+    if (today) cols.push(today);
+
     grid.replaceChildren.apply(grid, cols);
     focusEl.querySelector('#tree-focus-body').scrollTop = 0;
   }
