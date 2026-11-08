@@ -38,6 +38,9 @@ window.HistoryTree = (function () {
   var stage = null;     /* индекс открытого этапа или null */
   var hover = null;
   var raf = 0;
+  var focus = null;     /* индекс направления в фокусе или null */
+  var focusEl = null;   /* слой фокуса; пока он закрывается, focus уже null */
+  var closeTimer = 0;
 
   /* Данные */
 
@@ -371,6 +374,133 @@ window.HistoryTree = (function () {
     if (hooks.close) hooks.close();
   }
 
+  /* Фокус на ветке. Слой лежит поверх дерева, само дерево не трогается —
+     поэтому возврат приходится на то же место. */
+
+  var FOCUS_MS = 620;   /* совпадает с transition у .tree-focus */
+
+  function circle(r, o) { return 'circle(' + r + 'px at ' + o[0] + 'px ' + o[1] + 'px)'; }
+
+  /* Точка клика в координатах сцены: сцена масштабирована под окно. */
+  function originOf(e) {
+    if (!e || !e.detail) return [800, 450];
+    var r = root.getBoundingClientRect();
+    var k = r.width / 1600;
+    return [(e.clientX - r.left) / k, (e.clientY - r.top) / k];
+  }
+
+  function focusCard(title, items, isSub, order) {
+    var frag = Screens.clone('tpl-tree-focus-card');
+    frag.querySelector('[data-slot="title"]').textContent = title;
+    frag.querySelector('[data-slot="meta"]').textContent = items.length + ' ' + Screens.plural(items.length, T.eventForms);
+    frag.querySelector('[data-slot="icon"]').hidden = !isSub;
+
+    var dated = items.filter(function (it) { return yearOf(it[0]) !== null; });
+    var pending = items.filter(function (it) { return yearOf(it[0]) === null; });
+
+    var rows = frag.querySelector('[data-slot="rows"]');
+    dated.forEach(function (it, j) {
+      var row = Screens.clone('tpl-tree-focus-row');
+      var el = row.querySelector('.tree-event');
+      el.style.animationDelay = 0.35 + 0.05 * order.n++ + 's';
+      el.classList.toggle('is-first', j === 0);
+      el.classList.toggle('is-last', j === dated.length - 1);
+      row.querySelector('[data-slot="year"]').textContent = it[0];
+      row.querySelector('[data-slot="name"]').textContent = it[1];
+      rows.appendChild(row);
+    });
+
+    var box = frag.querySelector('[data-slot="pending"]');
+    box.hidden = !pending.length;
+    box.style.animationDelay = 0.35 + 0.05 * order.n++ + 's';
+    var list = frag.querySelector('[data-slot="pending-list"]');
+    pending.forEach(function (it) {
+      var row = Screens.clone('tpl-tree-focus-pending');
+      row.querySelector('[data-slot="name"]').textContent = it[1];
+      list.appendChild(row);
+    });
+    return frag;
+  }
+
+  function renderFocus() {
+    var branches = window.HISTORY_DATA.branches;
+    var n = branches.length;
+    var b = branches[focus];
+    var slot = function (name) { return focusEl.querySelector('[data-slot="' + name + '"]'); };
+    var fy = firstYear(b);
+
+    setColor(focusEl, b.type);
+    slot('kicker').textContent = T.treeDirection + ' · ' + String(focus + 1).padStart(2, '0') + ' / ' + n + ' · ' +
+      (fy !== null ? T.treeFirstEvent + ' ' + fy : T.treeStartPending);
+    slot('title').textContent = b.title;
+    slot('prev').textContent = branches[(focus + n - 1) % n].title;
+    slot('next').textContent = branches[(focus + 1) % n].title;
+
+    var order = { n: 0 };
+    var subs = b.subbranches || [];
+    var grid = slot('grid');
+    grid.classList.toggle('is-two', subs.length > 0);
+
+    var main = document.createElement('div');
+    main.className = 'tree-focus__col';
+    main.appendChild(focusCard(T.treeMainBranch, b.items, false, order));
+    var cols = [main];
+
+    if (subs.length) {
+      var side = document.createElement('div');
+      side.className = 'tree-focus__col';
+      subs.forEach(function (sb) { side.appendChild(focusCard(sb.title, sb.items, true, order)); });
+      cols.push(side);
+    }
+    grid.replaceChildren.apply(grid, cols);
+    focusEl.querySelector('#tree-focus-body').scrollTop = 0;
+  }
+
+  function openFocus(type, e) {
+    var index = window.HISTORY_DATA.branches.findIndex(function (b) { return b.type === type; });
+    var origin = originOf(e);
+
+    stopCamera();
+    clearTimeout(closeTimer);
+    if (focusEl) focusEl.remove();
+    setHover(null);
+    if (stage !== null) { stage = null; renderCard(); }
+
+    root.querySelector('.tree-screen').appendChild(Screens.clone('tpl-tree-focus'));
+    focusEl = root.querySelector('.tree-focus');
+    focusEl.dataset.origin = origin.join(',');
+    focusEl.style.clipPath = circle(0, origin);
+    focus = index;
+    renderFocus();
+
+    /* Два кадра: первое значение clip-path должно попасть в отрисовку, иначе перехода не будет. */
+    var el = focusEl;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { el.style.clipPath = circle(2000, origin); });
+    });
+    if (hooks.open) hooks.open();
+  }
+
+  function closeFocus() {
+    if (focus === null) return;
+    var el = focusEl;
+    focus = null;
+    el.style.clipPath = circle(0, el.dataset.origin.split(','));
+    closeTimer = setTimeout(function () {
+      el.remove();
+      if (focusEl === el) focusEl = null;
+    }, FOCUS_MS);
+    if (hooks.close) hooks.close();
+  }
+
+  function stepFocus(delta) {
+    if (focus === null) return;
+    var n = window.HISTORY_DATA.branches.length;
+    focus = (focus + delta + n) % n;
+    renderFocus();
+    if (hooks.step) hooks.step();
+  }
+
   /* Камера: держит фронт роста в окне и плавно поднимается до самого верха. */
 
   function startCamera() {
@@ -411,18 +541,30 @@ window.HistoryTree = (function () {
 
   function onClick(e) {
     var el = e.target;
+    if (el.closest('#tree-focus-back')) { closeFocus(); return; }
+    if (el.closest('#tree-focus-prev')) { stepFocus(-1); return; }
+    if (el.closest('#tree-focus-next')) { stepFocus(1); return; }
+
     var stageBtn = el.closest('[data-stage]');
     if (stageBtn) { pickStage(Number(stageBtn.dataset.stage)); return; }
-    if (el.closest('#tree-card-close')) closeCard();
+    if (el.closest('#tree-card-close')) { closeCard(); return; }
+
+    var pick = el.closest('[data-pick]');
+    if (pick) { openFocus(pick.dataset.pick, e); return; }
+    var branch = el.closest('[data-branch]');
+    if (branch) openFocus(branch.dataset.branch, e);
   }
 
   function init(el, h) {
     stopCamera();
+    clearTimeout(closeTimer);
     root = el;
     hooks = h || {};
     L = layout();
     stage = null;
     hover = null;
+    focus = null;
+    focusEl = null;
     hotItems = [];
     leaves = [];
     stageNodes = [];
@@ -453,12 +595,19 @@ window.HistoryTree = (function () {
 
   function key(e) {
     stopCamera();
+    if (focus !== null) {
+      if (e.key === 'Escape') { closeFocus(); return true; }
+      if (e.key === 'ArrowLeft') { stepFocus(-1); return true; }
+      if (e.key === 'ArrowRight') { stepFocus(1); return true; }
+    }
+    /* Клавиши прокрутки двигают то, что сейчас на экране: карточки фокуса или дерево. */
+    var view = focus !== null ? focusEl.querySelector('#tree-focus-body') : scroller;
     if (SCROLL_KEYS[e.key]) {
-      scroller.scrollBy({ top: SCROLL_KEYS[e.key], behavior: 'smooth' });
+      view.scrollBy({ top: SCROLL_KEYS[e.key], behavior: 'smooth' });
       return true;
     }
-    if (e.key === 'Home') { scroller.scrollTo({ top: 0, behavior: 'smooth' }); return true; }
-    if (e.key === 'End') { scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' }); return true; }
+    if (e.key === 'Home') { view.scrollTo({ top: 0, behavior: 'smooth' }); return true; }
+    if (e.key === 'End') { view.scrollTo({ top: view.scrollHeight, behavior: 'smooth' }); return true; }
     if (e.key === 'Escape' && stage !== null) { closeCard(); return true; }
     return false;
   }

@@ -379,6 +379,75 @@
   </button>
 </template>
 
+<template id="tpl-tree-focus">
+  <div class="tree-focus">
+    <div class="tree-focus__grid-bg"></div>
+    <div class="tree-focus__bar"></div>
+    <div class="head tree-focus__head">
+      <button class="chip" type="button" id="tree-focus-back">
+        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M14 24 V6 M7 13 L14 6 L21 13"></path>
+        </svg>
+        <span data-text="treeBack"></span>
+      </button>
+      <div class="head__titles">
+        <span class="head__kicker" data-slot="kicker"></span>
+        <span class="tree-focus__heading">
+          <span class="tree-focus__swatch"></span>
+          <span class="tree-focus__title" data-slot="title"></span>
+        </span>
+      </div>
+      <button class="tree-focus__nav" type="button" id="tree-focus-prev">
+        <svg class="tree-focus__nav-icon" width="20" height="20" viewBox="0 0 28 28" aria-hidden="true"><path d="M23 14 H6 M13 7 L6 14 L13 21"></path></svg>
+        <span class="tree-focus__nav-text">
+          <span class="tree-focus__nav-label" data-text="treePrev"></span>
+          <span class="tree-focus__nav-name" data-slot="prev"></span>
+        </span>
+      </button>
+      <button class="tree-focus__nav tree-focus__nav--next" type="button" id="tree-focus-next">
+        <span class="tree-focus__nav-text">
+          <span class="tree-focus__nav-label" data-text="treeNext"></span>
+          <span class="tree-focus__nav-name" data-slot="next"></span>
+        </span>
+        <svg class="tree-focus__nav-icon" width="20" height="20" viewBox="0 0 28 28" aria-hidden="true"><path d="M5 14 H22 M15 7 L22 14 L15 21"></path></svg>
+      </button>
+    </div>
+    <div class="tree-focus__body" id="tree-focus-body">
+      <div class="tree-focus__grid" data-slot="grid"></div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-tree-focus-card">
+  <div class="tree-fcard">
+    <div class="tree-fcard__top">
+      <svg class="tree-fcard__icon" data-slot="icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 2 V8 C4 12 8 15 12 15 H18"></path></svg>
+      <span class="tree-fcard__title" data-slot="title"></span>
+      <span class="tree-fcard__meta" data-slot="meta"></span>
+    </div>
+    <div class="tree-fcard__rows" data-slot="rows"></div>
+    <div class="tree-pending" data-slot="pending">
+      <span class="tree-pending__label" data-text="treeYearPending"></span>
+      <div class="tree-pending__list" data-slot="pending-list"></div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-tree-focus-row">
+  <div class="tree-event">
+    <span class="tree-event__year" data-slot="year"></span>
+    <span class="tree-event__axis"><span class="tree-event__line"></span><span class="tree-event__dot"></span></span>
+    <span class="tree-event__name" data-slot="name"></span>
+  </div>
+</template>
+
+<template id="tpl-tree-focus-pending">
+  <div class="tree-pending__row">
+    <span class="tree-pending__dot"></span>
+    <span class="tree-pending__name" data-slot="name"></span>
+  </div>
+</template>
+
 <template id="tpl-history-board">
   <div class="board-screen">
     <div class="head">

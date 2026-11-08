@@ -68,6 +68,13 @@ window.CONFIG = {
     treeStageEmpty: 'В этот период новых направлений нет',
     treeSince: 'с',
     treeCardClose: 'Закрыть',
+    treeBack: 'Назад к дереву',
+    treePrev: 'Предыдущее',
+    treeNext: 'Следующее',
+    treeDirection: 'Направление',
+    treeFirstEvent: 'первое событие —',
+    treeStartPending: 'год начала уточняется',
+    treeMainBranch: 'Основная ветка',
     eventForms: ['событие', 'события', 'событий'],
 
     boardTitle: 'Схема направлений',
