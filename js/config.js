@@ -60,6 +60,16 @@ window.CONFIG = {
     photoPrev: 'Предыдущее фото',
     photoNext: 'Следующее фото',
 
+    treeTitle: 'История развития университета',
+    treeHint: 'Нажмите на ветку или этап на стволе',
+    treeYearPending: 'Год уточняется',
+    treeStageKicker: 'Этап университета',
+    treeStageBranches: 'Направления, появившиеся в этот период',
+    treeStageEmpty: 'В этот период новых направлений нет',
+    treeSince: 'с',
+    treeCardClose: 'Закрыть',
+    eventForms: ['событие', 'события', 'событий'],
+
     boardTitle: 'Схема направлений',
     pinLegend: '= 1 направление',
     legendInst: 'Институтов:',

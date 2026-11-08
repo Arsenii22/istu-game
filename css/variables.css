@@ -16,6 +16,21 @@
   --c-photo-ink:#66748A;
   --g-title:linear-gradient(90deg, var(--c-teal), var(--c-blue-deep));
 
+  /* Цвета веток дерева: ключ — поле type направления в js/data/history.js. */
+  --branch-mountain:#5F7C57;
+  --branch-geology:#84966B;
+  --branch-metallurgy:#A5735E;
+  --branch-construction:#6385B0;
+  --branch-mechanical:#8676A8;
+  --branch-energy:#B8924A;
+  --branch-it:#3F8794;
+  --branch-chemistry:#669583;
+  --branch-economics:#A08658;
+  --branch-humanities:#A57B96;
+  --branch-art:#B37F70;
+  --branch-design:#7A7FB2;
+  --branch-transport:#6E7D8C;
+
   --font-ui:'Montserrat', system-ui, sans-serif;
   --font-mono:'JetBrains Mono', monospace;
 

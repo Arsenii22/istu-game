@@ -52,7 +52,7 @@
     },
     history: function () {
       show('history');
-      window.HistoryBoard.init(document.getElementById('history'), {
+      window.HistoryTree.init(document.getElementById('history'), {
         pick: function () { blip(700, 0.05); },
         open: function () { blip(880, 0.08); },
         close: function () { blip(440); },
@@ -132,7 +132,7 @@
   });
 
   /* mouseover, в отличие от mouseenter, всплывает; отсеиваем перемещения внутри кнопки. */
-  var HOVER_SELECTOR = '.mode, #btn-back, #btn-about, #btn-about-ok, .chip, .round, .viewer__all, .btn-primary, .dir-page__btn, .pair__btn, .btn-write, .feed__more-btn, .rform__submit, .thanks__primary, .thanks__again';
+  var HOVER_SELECTOR = '.mode, #btn-back, #btn-about, #btn-about-ok, .chip, .round, .viewer__all, .btn-primary, .dir-page__btn, .pair__btn, .btn-write, .feed__more-btn, .rform__submit, .thanks__primary, .thanks__again, .tree-stage, .tree-label, .tree-card__row';
   document.addEventListener('mouseover', function (e) {
     var el = e.target.closest(HOVER_SELECTOR);
     if (!el) return;
@@ -153,7 +153,7 @@
   window.addEventListener('keydown', function (e) {
     var screen = S.currentScreen();
     if (screen === 'gallery' && window.Gallery.key(e)) return;
-    if (screen === 'history' && window.HistoryBoard.key(e)) return;
+    if (screen === 'history' && window.HistoryTree.key(e)) return;
     if (screen === 'museum' && window.Museum.key(e)) return;
     if (screen === 'review-form' && window.ReviewForm.key(e)) return;
 

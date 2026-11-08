@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/menu.css">
 <link rel="stylesheet" href="css/gallery.css">
 <link rel="stylesheet" href="css/history.css">
+<link rel="stylesheet" href="css/history-tree.css">
 <link rel="stylesheet" href="css/museum.css">
 <link rel="stylesheet" href="css/reviews.css">
 <link rel="stylesheet" href="css/review-form.css">
@@ -307,6 +308,75 @@
 <!-- История: контейнер раздела; history.js кладёт в него схему или страницу направления. -->
 <template id="tpl-history">
   <div class="history" id="history"></div>
+</template>
+
+<!-- Растущее дерево: history-tree.js строит рисунок и подписи из js/data/history.js. -->
+<template id="tpl-history-tree">
+  <div class="tree-screen">
+    <div class="tree-scroll" id="tree-scroll">
+      <div class="tree-canvas" id="tree-canvas">
+        <svg class="tree-svg" id="tree-svg" aria-hidden="true"></svg>
+        <div class="tree-crown-label" id="tree-crown" data-text="treeYearPending"></div>
+        <div id="tree-stages"></div>
+        <div id="tree-labels"></div>
+        <div id="tree-card"></div>
+      </div>
+    </div>
+    <div class="tree-top-fade"></div>
+    <div class="head">
+      <button class="chip" type="button" data-go="menu">
+        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
+        </svg>
+        <span data-text="back"></span>
+      </button>
+      <div class="head__titles">
+        <span class="head__kicker" data-text="historyTitle"></span>
+        <span class="head__title" data-text="treeTitle"></span>
+      </div>
+      <span class="tree-hint" data-text="treeHint"></span>
+      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
+    </div>
+  </div>
+</template>
+
+<template id="tpl-tree-stage">
+  <button class="tree-stage" type="button">
+    <span class="tree-stage__year" data-slot="year"></span>
+    <span></span>
+    <span class="tree-stage__name" data-slot="name"></span>
+  </button>
+</template>
+
+<template id="tpl-tree-label">
+  <button class="tree-label" type="button">
+    <span class="tree-label__title" data-slot="title"></span>
+    <span class="tree-label__meta" data-slot="meta"></span>
+  </button>
+</template>
+
+<template id="tpl-tree-card">
+  <div class="tree-card">
+    <div class="tree-card__top">
+      <span class="tree-card__kicker" data-text="treeStageKicker"></span>
+      <button class="tree-card__close" id="tree-card-close" type="button" data-alt-text="treeCardClose">
+        <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13"></path></svg>
+      </button>
+    </div>
+    <span class="tree-card__period" data-slot="period"></span>
+    <span class="tree-card__name" data-slot="name"></span>
+    <div class="tree-card__rule"></div>
+    <span class="tree-card__head" data-slot="head"></span>
+    <div class="tree-card__list" data-slot="list"></div>
+  </div>
+</template>
+
+<template id="tpl-tree-card-row">
+  <button class="tree-card__row" type="button">
+    <span class="tree-card__swatch"></span>
+    <span class="tree-card__title" data-slot="title"></span>
+    <span class="tree-card__year" data-slot="year"></span>
+  </button>
 </template>
 
 <template id="tpl-history-board">
@@ -760,6 +830,7 @@
 <script src="js/screens.js"></script>
 <script src="js/gallery.js"></script>
 <script src="js/history.js"></script>
+<script src="js/history-tree.js"></script>
 <script src="js/museum.js"></script>
 <script src="js/reviews.js"></script>
 <script src="js/review-form.js"></script>
