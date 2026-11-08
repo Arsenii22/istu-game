@@ -35,7 +35,7 @@ window.HistoryBoard = (function () {
   function pad(n) { return String(n).padStart(2, '0'); }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
-  function institutes() { return window.HISTORY_DATA.institutes; }
+  function institutes() { return window.HISTORY_BOARD_DATA.institutes; }
   function dirCode(i, j) { return pad(i + 1) + '.' + pad(j + 1); }
   function dirCount(n) { return n + ' ' + Screens.plural(n, T.directionForms); }
 
@@ -280,8 +280,8 @@ window.HistoryBoard = (function () {
 
     onPage = false;
     root.replaceChildren(Screens.clone('tpl-history-board'));
-    root.querySelector('#core-name').textContent = window.HISTORY_DATA.core.name;
-    root.querySelector('#core-sub').textContent = 'CORE · ' + window.HISTORY_DATA.core.year;
+    root.querySelector('#core-name').textContent = window.HISTORY_BOARD_DATA.core.name;
+    root.querySelector('#core-sub').textContent = 'CORE · ' + window.HISTORY_BOARD_DATA.core.year;
     root.querySelector('#legend-inst').textContent = T.legendInst + ' ' + list.length;
     root.querySelector('#legend-dir').textContent = T.legendDir + ' ' + total;
     drawTraces(layout(list.length));

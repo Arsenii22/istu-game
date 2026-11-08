@@ -1,5 +1,5 @@
-/* Отзывы выпускников: лента в колонках и фильтры по институтам.
-   Отзывы — js/data/reviews.js, список институтов — js/data/history.js. */
+/* Отзывы выпускников: лента в колонках и фильтры по направлениям.
+   Отзывы — js/data/reviews.js, список направлений — js/data/history.js. */
 
 window.Reviews = (function () {
   'use strict';
@@ -10,7 +10,7 @@ window.Reviews = (function () {
 
   var root = null;
   var hooks = {};
-  var filter = null;    /* название института или null — все отзывы */
+  var filter = null;    /* название направления или null — все отзывы */
   var shown = PAGE;
 
   /* Свежие сверху. Даты в формате ГГГГ-ММ-ДД сравниваются как строки. */
@@ -21,7 +21,7 @@ window.Reviews = (function () {
   }
 
   function visible() {
-    return sorted().filter(function (r) { return !filter || r.institute === filter; });
+    return sorted().filter(function (r) { return !filter || r.direction === filter; });
   }
 
   function initials(name) {
@@ -33,12 +33,12 @@ window.Reviews = (function () {
     var row = root.querySelector('#filters');
     row.replaceChildren();
 
-    var names = [null].concat(window.HISTORY_DATA.institutes.map(function (it) { return it.name; }));
+    var names = [null].concat(window.HISTORY_DATA.branches.map(function (b) { return b.title; }));
     names.forEach(function (name) {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'pill' + (name === filter ? ' is-active' : '');
-      b.dataset.institute = name || '';
+      b.dataset.direction = name || '';
       b.textContent = name || T.allReviews;
       row.appendChild(b);
     });
@@ -99,7 +99,7 @@ window.Reviews = (function () {
   function onClick(e) {
     var el = e.target;
     var pill = el.closest('.pill');
-    if (pill) { setFilter(pill.dataset.institute || null); return; }
+    if (pill) { setFilter(pill.dataset.direction || null); return; }
     if (el.closest('#btn-write')) { if (hooks.write) hooks.write(); return; }
     if (el.closest('#btn-more')) {
       shown += PAGE;

@@ -1,5 +1,5 @@
 /* Форма отзыва выпускника: проверка полей, локальный предпросмотр фото и экран «Спасибо».
-   Список «Направление / институт» — из js/data/history.js.
+   Список направлений — из js/data/history.js.
    Данные никуда не отправляются: вся отправка собрана в submitReview() ниже. */
 
 window.ReviewForm = (function () {
@@ -21,7 +21,7 @@ window.ReviewForm = (function () {
      Сейчас функция ничего не отправляет: данные остаются в браузере, после неё сразу
      показывается экран «Спасибо». Адрес сервера — CONFIG.reviewEndpoint в js/config.js.
 
-     review = { name, year, institute, direction, text, date, photo }
+     review = { name, year, direction, text, date, photo }
        photo — объект File или null; сам файл тоже никуда не загружается.
 
      Когда появится сервер, здесь нужно отправить review на CONFIG.reviewEndpoint
@@ -43,14 +43,10 @@ window.ReviewForm = (function () {
   function field(name) { return form.elements[name]; }
 
   function values() {
-    var dir = field('direction').value;
-    var ij = dir ? dir.split('.').map(Number) : null;
-    var inst = ij ? window.HISTORY_DATA.institutes[ij[0]] : null;
     return {
       name: field('name').value.trim(),
       year: field('year').value,
-      institute: inst ? inst.name : '',
-      direction: inst ? inst.directions[ij[1]].name : '',
+      direction: field('direction').value,
       text: field('text').value.trim(),
     };
   }
@@ -65,7 +61,6 @@ window.ReviewForm = (function () {
     };
   }
 
-  /* Направления сгруппированы по институтам. Значение — «институт.направление» по порядку в данных. */
   function fillDirections() {
     var select = field('direction');
     var first = document.createElement('option');
@@ -73,16 +68,11 @@ window.ReviewForm = (function () {
     first.textContent = T.directionPlaceholder;
     select.replaceChildren(first);
 
-    window.HISTORY_DATA.institutes.forEach(function (inst, i) {
-      var group = document.createElement('optgroup');
-      group.label = inst.name;
-      inst.directions.forEach(function (d, j) {
-        var o = document.createElement('option');
-        o.value = i + '.' + j;
-        o.textContent = d.name;
-        group.appendChild(o);
-      });
-      select.appendChild(group);
+    window.HISTORY_DATA.branches.forEach(function (b) {
+      var o = document.createElement('option');
+      o.value = b.title;
+      o.textContent = b.title;
+      select.appendChild(o);
     });
   }
 
