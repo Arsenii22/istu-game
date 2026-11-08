@@ -10,7 +10,6 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/menu.css">
 <link rel="stylesheet" href="css/gallery.css">
-<link rel="stylesheet" href="css/history.css">
 <link rel="stylesheet" href="css/history-tree.css">
 <link rel="stylesheet" href="css/museum.css">
 <link rel="stylesheet" href="css/reviews.css">
@@ -305,7 +304,7 @@
   </div>
 </template>
 
-<!-- История: контейнер раздела; history.js кладёт в него схему или страницу направления. -->
+<!-- История: контейнер раздела; history-tree.js кладёт в него дерево направлений. -->
 <template id="tpl-history">
   <div class="history" id="history"></div>
 </template>
@@ -445,116 +444,6 @@
   <div class="tree-pending__row">
     <span class="tree-pending__dot"></span>
     <span class="tree-pending__name" data-slot="name"></span>
-  </div>
-</template>
-
-<template id="tpl-history-board">
-  <div class="board-screen">
-    <div class="head">
-      <button class="chip" type="button" data-go="menu">
-        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
-          <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
-        </svg>
-        <span data-text="back"></span>
-      </button>
-      <div class="head__titles">
-        <span class="head__kicker" data-text="historyTitle"></span>
-        <span class="head__title" data-text="boardTitle"></span>
-      </div>
-      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
-    </div>
-
-    <div class="board" id="board">
-      <svg class="board__traces" id="board-traces" width="1060" height="730" viewBox="0 0 1060 730" aria-hidden="true"></svg>
-      <div class="board__core">
-        <span class="board__core-name" id="core-name"></span>
-        <span class="board__core-sub" id="core-sub"></span>
-      </div>
-      <div id="board-nodes"></div>
-      <div class="board__legend">
-        <span id="legend-inst"></span>
-        <span id="legend-dir"></span>
-      </div>
-      <div class="board__key">
-        <span class="board__key-pin"></span>
-        <span data-text="pinLegend"></span>
-      </div>
-    </div>
-
-    <div class="inst-panel">
-      <span class="inst-panel__code" id="inst-code"></span>
-      <span class="inst-panel__name" id="inst-name"></span>
-      <p class="inst-panel__about" id="inst-about"></p>
-      <div class="inst-panel__rule"></div>
-      <span class="inst-panel__count" id="inst-count"></span>
-      <div class="inst-panel__list" id="inst-dirs"></div>
-      <button class="btn-primary" type="button" id="btn-read">
-        <span id="read-label"></span>
-        <svg class="btn-primary__icon" width="20" height="20" viewBox="0 0 28 28" aria-hidden="true"><path d="M5 14 H22 M15 7 L22 14 L15 21"></path></svg>
-      </button>
-    </div>
-  </div>
-</template>
-
-<template id="tpl-history-node">
-  <button class="node" type="button">
-    <span class="node__box">
-      <span class="node__chip"><span class="node__chip-core"></span></span>
-      <span class="node__text">
-        <span class="node__label" data-slot="label"></span>
-        <span class="node__sub" data-slot="sub"></span>
-      </span>
-    </span>
-    <span class="node__pins" data-slot="pins"></span>
-  </button>
-</template>
-
-<template id="tpl-history-dir">
-  <button class="dir-row" type="button">
-    <span class="dir-row__code" data-slot="code"></span>
-    <span class="dir-row__name" data-slot="name"></span>
-    <svg class="dir-row__icon" width="18" height="18" viewBox="0 0 28 28" aria-hidden="true"><path d="M5 14 H22 M15 7 L22 14 L15 21"></path></svg>
-  </button>
-</template>
-
-<template id="tpl-history-page">
-  <div class="dir-page">
-    <div class="head">
-      <button class="chip" type="button" data-go="menu">
-        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
-          <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
-        </svg>
-        <span data-text="back"></span>
-      </button>
-      <button class="chip chip--plain" type="button" id="btn-all-dirs">
-        <span data-text="allDirections"></span>
-      </button>
-      <div class="head__titles"></div>
-      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
-    </div>
-
-    <div class="dir-page__card">
-      <span class="dir-page__inst" id="page-inst"></span>
-      <h2 class="dir-page__title" id="page-title"></h2>
-      <div class="dir-page__text" id="page-text"></div>
-      <div class="dir-page__rule"></div>
-      <span class="dir-page__label" data-text="keyStages"></span>
-      <div class="dir-page__stages" id="page-stages"></div>
-    </div>
-
-    <div class="dir-page__photo" id="page-photo"></div>
-    <span class="dir-page__caption" id="page-caption"></span>
-
-    <div class="dir-page__nav">
-      <button class="dir-page__btn" type="button" id="dir-prev">
-        <svg class="dir-page__btn-icon" width="20" height="20" viewBox="0 0 28 28" aria-hidden="true"><path d="M17 6 L9 14 L17 22"></path></svg>
-        <span data-text="prevDirection"></span>
-      </button>
-      <button class="dir-page__btn dir-page__btn--primary" type="button" id="dir-next">
-        <span data-text="nextDirection"></span>
-        <svg class="dir-page__btn-icon" width="20" height="20" viewBox="0 0 28 28" aria-hidden="true"><path d="M11 6 L19 14 L11 22"></path></svg>
-      </button>
-    </div>
   </div>
 </template>
 
@@ -892,13 +781,11 @@
 
 <script src="js/config.js"></script>
 <script src="js/data/gallery.js"></script>
-<script src="js/data/history-board.js"></script>
 <script src="js/data/history.js"></script>
 <script src="js/data/museum.js"></script>
 <script src="js/data/reviews.js"></script>
 <script src="js/screens.js"></script>
 <script src="js/gallery.js"></script>
-<script src="js/history.js"></script>
 <script src="js/history-tree.js"></script>
 <script src="js/museum.js"></script>
 <script src="js/reviews.js"></script>

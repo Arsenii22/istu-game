@@ -77,18 +77,6 @@ window.CONFIG = {
     treeMainBranch: 'Основная ветка',
     eventForms: ['событие', 'события', 'событий'],
 
-    boardTitle: 'Схема направлений',
-    pinLegend: '= 1 направление',
-    legendInst: 'Институтов:',
-    legendDir: 'Направлений:',
-    instituteNode: 'Институт',
-    directionForms: ['направление', 'направления', 'направлений'],
-    readHistory: 'Читать историю',
-    allDirections: 'Все направления',
-    keyStages: 'Ключевые этапы',
-    illustration: 'Фото / иллюстрация',
-    prevDirection: 'Предыдущее',
-    nextDirection: 'Следующее направление',
 
     hallsTitle: 'Залы музея',
     hall: 'Зал',
