@@ -71,6 +71,7 @@
         link: function (section, value, from) {
           blip(880, 0.1);
           branchSnap = from;
+          branchSnap.value = value;
           SECTIONS[section](value);
         },
       }, snap);
@@ -90,7 +91,7 @@
         pick: function () { blip(700, 0.05); },
         more: function () { blip(660, 0.05); },
         write: function () { blip(880, 0.08); SECTIONS['review-form'](); },
-      });
+      }, branchSnap ? branchSnap.value : null);   /* и после формы отзыва фильтр ветки остаётся */
     },
     'review-form': function () {
       show('review-form');

@@ -372,6 +372,11 @@
 .tree-today__link:hover{background:var(--c-blue-deep);box-shadow:0 0 0 4px var(--c-glow)}
 .tree-today__link[hidden]{display:none}
 
+.tree-reviews{display:flex;flex-direction:column;align-items:flex-start;gap:14px;animation:pp-in .4s ease-out both}
+.tree-reviews__list{align-self:stretch;display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;align-items:start}
+.tree-reviews__list .review{margin:0}
+.tree-reviews__all{height:40px;padding:0 18px;font-size:15px}
+
 /* Возврат из другого раздела: дерево и карточки уже на месте, без анимации появления. */
 .tree-canvas.is-static *,
 .tree-focus.is-static *{animation:none}

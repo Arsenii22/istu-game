@@ -80,6 +80,7 @@ window.CONFIG = {
     toBranch: 'К ветке',
     treeToday: 'Сегодня',
     treeApply: 'Поступить',
+    treeReviewsAll: 'Все отзывы направления',
     eventForms: ['событие', 'события', 'событий'],
 
 

@@ -379,6 +379,7 @@ window.HistoryTree = (function () {
      поэтому возврат приходится на то же место. */
 
   var FOCUS_MS = 620;   /* совпадает с transition у .tree-focus */
+  var REVIEWS_SHOWN = 3;
 
   function circle(r, o) { return 'circle(' + r + 'px at ' + o[0] + 'px ' + o[1] + 'px)'; }
 
@@ -491,6 +492,18 @@ window.HistoryTree = (function () {
     return frag;
   }
 
+  /* Свежие отзывы направления; если их нет, блока нет. */
+  function reviewsBlock(b, order) {
+    var cards = window.Reviews.latestCards(b.title, REVIEWS_SHOWN);
+    if (!cards.length) return null;
+
+    var frag = Screens.clone('tpl-tree-reviews');
+    var block = frag.firstElementChild;
+    block.style.animationDelay = 0.35 + 0.05 * order.n++ + 's';
+    cards.forEach(function (c) { frag.querySelector('[data-slot="list"]').appendChild(c); });
+    return block;
+  }
+
   /* Блок «Сегодня»: без text его нет, без link нет кнопки. */
   function todayBlock(b, order) {
     var today = b.today || {};
@@ -535,6 +548,9 @@ window.HistoryTree = (function () {
       subs.forEach(function (sb) { side.appendChild(focusCard(sb.title, sb.items, true, order)); });
       cols.push(side);
     }
+
+    var reviews = reviewsBlock(b, order);
+    if (reviews) cols.push(reviews);
 
     var today = todayBlock(b, order);
     if (today) cols.push(today);
@@ -651,6 +667,10 @@ window.HistoryTree = (function () {
     if (thumb) { openPhoto(thumb); return; }
     var link = el.closest('[data-link]');
     if (link) { followLink(link); return; }
+    if (el.closest('#tree-reviews-all')) {
+      if (hooks.link) hooks.link('reviews', window.HISTORY_DATA.branches[focus].title, snapshot());
+      return;
+    }
 
     if (el.closest('#tree-focus-back')) { closeFocus(); return; }
     if (el.closest('#tree-focus-prev')) { stepFocus(-1); return; }

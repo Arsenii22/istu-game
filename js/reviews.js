@@ -116,10 +116,19 @@ window.Reviews = (function () {
     e.preventDefault();
   }
 
-  function init(el, h) {
+  /* Карточки n самых свежих отзывов направления. */
+  function latestCards(direction, n) {
+    return sorted()
+      .filter(function (r) { return r.direction === direction; })
+      .slice(0, n)
+      .map(makeCard);
+  }
+
+  /* startFilter — необязательно: направление, выбранное сразу. */
+  function init(el, h, startFilter) {
     root = el;
     hooks = h || {};
-    filter = null;
+    filter = startFilter || null;
     shown = PAGE;
     root.addEventListener('click', onClick);
     root.querySelector('#filters').addEventListener('wheel', onWheel, { passive: false });
@@ -127,5 +136,5 @@ window.Reviews = (function () {
     renderFeed();
   }
 
-  return { init: init };
+  return { init: init, latestCards: latestCards };
 })();

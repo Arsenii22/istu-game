@@ -481,6 +481,15 @@
   </div>
 </template>
 
+<!-- Свежие отзывы направления в фокусе ветки; карточки — tpl-review. -->
+<template id="tpl-tree-reviews">
+  <section class="tree-reviews tree-focus__wide">
+    <span class="tree-today__label" data-text="reviewsFull"></span>
+    <div class="tree-reviews__list" data-slot="list"></div>
+    <button class="tree-link tree-reviews__all" type="button" id="tree-reviews-all" data-text="treeReviewsAll"></button>
+  </section>
+</template>
+
 <!-- Блок «Сегодня»: поле today направления в js/data/history.js. -->
 <template id="tpl-tree-today">
   <section class="tree-today tree-focus__wide">
@@ -642,6 +651,12 @@
         </svg>
         <span data-text="back"></span>
       </button>
+      <button class="chip chip--to-branch" type="button" data-go="branch">
+        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
+        </svg>
+        <span data-text="toBranch"></span>
+      </button>
       <div class="head__titles">
         <span class="head__kicker" data-text="reviewsTitle"></span>
         <span class="head__title" data-text="reviewsFull"></span>
@@ -697,6 +712,12 @@
           <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
         </svg>
         <span data-text="back"></span>
+      </button>
+      <button class="chip chip--to-branch" type="button" data-go="branch">
+        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
+        </svg>
+        <span data-text="toBranch"></span>
       </button>
       <button class="chip chip--plain" type="button" data-go="reviews">
         <span data-text="allReviews"></span>
