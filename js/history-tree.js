@@ -41,6 +41,7 @@ window.HistoryTree = (function () {
   var focus = null;     /* индекс направления в фокусе или null */
   var focusEl = null;   /* слой фокуса; пока он закрывается, focus уже null */
   var closeTimer = 0;
+  var photoEl = null;   /* открытое крупно фото события или null */
 
   /* Данные */
 
@@ -389,6 +390,42 @@ window.HistoryTree = (function () {
     return [(e.clientX - r.left) / k, (e.clientY - r.top) / k];
   }
 
+  /* Третий элемент события — { about, photo }. Если оба пусты, событие выглядит как обычно. */
+  function addDetail(box, it) {
+    var d = it[2] || {};
+    if (!d.about && !d.photo) return;
+
+    var frag = Screens.clone('tpl-tree-detail');
+    var thumb = frag.querySelector('[data-slot="thumb"]');
+    var about = frag.querySelector('[data-slot="about"]');
+    thumb.hidden = !d.photo;
+    if (d.photo) {
+      thumb.dataset.photo = d.photo;
+      thumb.dataset.caption = it[1];
+      frag.querySelector('[data-slot="img"]').src = d.photo;
+    }
+    about.hidden = !d.about;
+    about.textContent = d.about || '';
+    box.appendChild(frag);
+  }
+
+  function openPhoto(thumb) {
+    var frag = Screens.clone('tpl-tree-photo');
+    var img = frag.querySelector('[data-slot="img"]');
+    img.src = thumb.dataset.photo;
+    img.alt = thumb.dataset.caption;
+    frag.querySelector('[data-slot="caption"]').textContent = thumb.dataset.caption;
+    focusEl.appendChild(frag);
+    photoEl = focusEl.querySelector('#tree-photo');
+    if (hooks.open) hooks.open();
+  }
+
+  function closePhoto() {
+    photoEl.remove();
+    photoEl = null;
+    if (hooks.close) hooks.close();
+  }
+
   function focusCard(title, items, isSub, order) {
     var frag = Screens.clone('tpl-tree-focus-card');
     frag.querySelector('[data-slot="title"]').textContent = title;
@@ -407,6 +444,7 @@ window.HistoryTree = (function () {
       el.classList.toggle('is-last', j === dated.length - 1);
       row.querySelector('[data-slot="year"]').textContent = it[0];
       row.querySelector('[data-slot="name"]').textContent = it[1];
+      addDetail(row.querySelector('[data-slot="body"]'), it);
       rows.appendChild(row);
     });
 
@@ -417,6 +455,7 @@ window.HistoryTree = (function () {
     pending.forEach(function (it) {
       var row = Screens.clone('tpl-tree-focus-pending');
       row.querySelector('[data-slot="name"]').textContent = it[1];
+      addDetail(row.querySelector('[data-slot="body"]'), it);
       list.appendChild(row);
     });
     return frag;
@@ -541,6 +580,13 @@ window.HistoryTree = (function () {
 
   function onClick(e) {
     var el = e.target;
+    if (photoEl) {
+      if (!el.closest('.tree-photo__img')) closePhoto();
+      return;
+    }
+    var thumb = el.closest('.tree-detail__thumb');
+    if (thumb) { openPhoto(thumb); return; }
+
     if (el.closest('#tree-focus-back')) { closeFocus(); return; }
     if (el.closest('#tree-focus-prev')) { stepFocus(-1); return; }
     if (el.closest('#tree-focus-next')) { stepFocus(1); return; }
@@ -565,6 +611,7 @@ window.HistoryTree = (function () {
     hover = null;
     focus = null;
     focusEl = null;
+    photoEl = null;
     hotItems = [];
     leaves = [];
     stageNodes = [];
@@ -595,6 +642,10 @@ window.HistoryTree = (function () {
 
   function key(e) {
     stopCamera();
+    if (photoEl) {
+      if (e.key === 'Escape') closePhoto();
+      return true;
+    }
     if (focus !== null) {
       if (e.key === 'Escape') { closeFocus(); return true; }
       if (e.key === 'ArrowLeft') { stepFocus(-1); return true; }

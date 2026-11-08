@@ -301,7 +301,45 @@
 .tree-event.is-first .tree-event__line{top:17px}
 .tree-event.is-last .tree-event__line{bottom:calc(100% - 17px)}
 .tree-event__dot{position:relative;margin-top:10px;width:14px;height:14px;border-radius:50%;background:var(--b);box-shadow:0 0 0 4px var(--c-surface)}
-.tree-event__name{padding:6px 0 14px 4px;font-size:16.5px;line-height:1.4;font-weight:600;text-wrap:pretty}
+.tree-event__body{display:flex;flex-direction:column;gap:10px;min-width:0;padding:6px 0 14px 4px}
+.tree-event__name{font-size:16.5px;line-height:1.4;font-weight:600;text-wrap:pretty}
+
+/* Описание и фото события; размер миниатюры задан, чтобы высота строки не зависела от загрузки. */
+.tree-detail{display:flex;align-items:flex-start;gap:14px}
+.tree-detail__thumb{
+  width:112px;
+  height:80px;
+  flex:none;
+  padding:0;
+  overflow:hidden;
+  border:1.5px solid var(--c-line);
+  border-radius:8px;
+  background:var(--c-bg);
+  cursor:zoom-in;
+  transition:border-color .16s ease, box-shadow .16s ease;
+}
+.tree-detail__thumb:hover{border-color:var(--c-blue);box-shadow:0 0 0 4px var(--c-glow)}
+.tree-detail__thumb[hidden]{display:none}
+.tree-detail__img{width:100%;height:100%;display:block;object-fit:cover}
+.tree-detail__about{margin:0;font-size:15px;line-height:1.45;color:var(--c-ink-dim);text-wrap:pretty}
+
+/* Фото события крупно */
+.tree-photo{
+  position:absolute;
+  inset:0;
+  z-index:30;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  padding:40px 90px;
+  background:color-mix(in srgb, var(--c-ink) 85%, transparent);
+  animation:tree-fade .2s ease-out both;
+}
+.tree-photo__close{position:absolute;right:40px;top:30px;width:44px;height:44px}
+.tree-photo__img{min-height:0;max-width:100%;max-height:760px;display:block;border-radius:10px;background:var(--c-bg)}
+.tree-photo__caption{font-size:20px;font-weight:700;color:var(--c-surface);text-align:center}
 
 .tree-pending{
   display:flex;
@@ -318,4 +356,5 @@
 .tree-pending__list{display:flex;flex-direction:column;gap:10px}
 .tree-pending__row{display:flex;align-items:flex-start;gap:12px}
 .tree-pending__dot{width:12px;height:12px;flex:none;margin-top:5px;border-radius:50%;border:2.5px solid var(--b);background:var(--c-surface)}
+.tree-pending__body{display:flex;flex-direction:column;gap:10px;min-width:0}
 .tree-pending__name{font-size:15.5px;line-height:1.4;font-weight:600}

@@ -436,14 +436,38 @@
   <div class="tree-event">
     <span class="tree-event__year" data-slot="year"></span>
     <span class="tree-event__axis"><span class="tree-event__line"></span><span class="tree-event__dot"></span></span>
-    <span class="tree-event__name" data-slot="name"></span>
+    <div class="tree-event__body" data-slot="body">
+      <span class="tree-event__name" data-slot="name"></span>
+    </div>
   </div>
 </template>
 
 <template id="tpl-tree-focus-pending">
   <div class="tree-pending__row">
     <span class="tree-pending__dot"></span>
-    <span class="tree-pending__name" data-slot="name"></span>
+    <div class="tree-pending__body" data-slot="body">
+      <span class="tree-pending__name" data-slot="name"></span>
+    </div>
+  </div>
+</template>
+
+<!-- Необязательные описание и фото события: третий элемент события в js/data/history.js. -->
+<template id="tpl-tree-detail">
+  <div class="tree-detail">
+    <button class="tree-detail__thumb" type="button" data-slot="thumb" data-alt-text="treePhotoOpen">
+      <img class="tree-detail__img" data-slot="img" alt="">
+    </button>
+    <p class="tree-detail__about" data-slot="about"></p>
+  </div>
+</template>
+
+<template id="tpl-tree-photo">
+  <div class="tree-photo" id="tree-photo">
+    <button class="tree-card__close tree-photo__close" type="button" data-alt-text="treeCardClose">
+      <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13"></path></svg>
+    </button>
+    <img class="tree-photo__img" data-slot="img" alt="">
+    <span class="tree-photo__caption" data-slot="caption"></span>
   </div>
 </template>
 

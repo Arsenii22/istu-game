@@ -74,6 +74,7 @@ window.CONFIG = {
     treeFirstEvent: 'первое событие —',
     treeStartPending: 'год начала уточняется',
     treeMainBranch: 'Основная ветка',
+    treePhotoOpen: 'Открыть фото крупно',
     eventForms: ['событие', 'события', 'событий'],
 
 
