@@ -451,6 +451,7 @@
     <div class="tree-event__body" data-slot="body">
       <span class="tree-event__name" data-slot="name"></span>
     </div>
+    <svg class="tree-event__arrow" width="16" height="16" viewBox="0 0 28 28" aria-hidden="true"><path d="M5 14 H22 M15 7 L22 14 L15 21"></path></svg>
   </div>
 </template>
 
@@ -473,12 +474,9 @@
   </div>
 </template>
 
-<!-- Связи события с другими разделами. Кнопка без подходящего года или зала скрыта. -->
-<template id="tpl-tree-links">
-  <div class="tree-links">
-    <button class="tree-link" type="button" data-link="gallery" data-text="treeLinkGallery"></button>
-    <button class="tree-link" type="button" data-link="museum" data-text="treeLinkMuseum"></button>
-  </div>
+<!-- Меню переходов события; пункты добавляет history-tree.js. -->
+<template id="tpl-tree-menu">
+  <div class="tree-menu" id="tree-menu" role="menu"></div>
 </template>
 
 <!-- Свежие отзывы направления в фокусе ветки; карточки — tpl-review. -->

@@ -42,6 +42,8 @@ window.HistoryTree = (function () {
   var focusEl = null;   /* слой фокуса; пока он закрывается, focus уже null */
   var closeTimer = 0;
   var photoEl = null;   /* открытое крупно фото события или null */
+  var menuEl = null;    /* открытое меню переходов или null */
+  var menuRow = null;   /* строка события, к которой оно открыто */
 
   /* Данные */
 
@@ -380,6 +382,7 @@ window.HistoryTree = (function () {
 
   var FOCUS_MS = 620;   /* совпадает с transition у .tree-focus */
   var REVIEWS_SHOWN = 3;
+  var MENU_GAP = 4;     /* зазор между строкой события и меню */
 
   function circle(r, o) { return 'circle(' + r + 'px at ' + o[0] + 'px ' + o[1] + 'px)'; }
 
@@ -410,18 +413,79 @@ window.HistoryTree = (function () {
     box.appendChild(frag);
   }
 
-  /* Кнопки в другие разделы; если подходящего выпуска или зала нет, кнопки нет. */
-  function addLinks(box, year) {
-    var targets = { gallery: window.Gallery.nearestYear(year), museum: window.Museum.hallForYear(year) };
-    if (targets.gallery === null && targets.museum === null) return;
+  /* Переходы события: только те, что реально откроются. */
+  function eventLinks(year) {
+    var list = [];
+    var release = window.Gallery.nearestYear(year);
+    var hall = window.Museum.hallForYear(year);
+    if (release !== null) {
+      list.push({ section: 'gallery', value: release, label: T.treeMenuGallery.replace('{year}', release) });
+    }
+    if (hall !== null) {
+      list.push({ section: 'museum', value: hall, label: T.treeMenuMuseum.replace('{name}', window.MUSEUM_DATA[hall].name) });
+    }
+    return list;
+  }
 
-    var frag = Screens.clone('tpl-tree-links');
-    frag.querySelectorAll('[data-link]').forEach(function (btn) {
-      var value = targets[btn.dataset.link];
-      btn.hidden = value === null;
-      btn.dataset.value = value;
+  /* Строка с переходами кликабельна; без них остаётся обычной. */
+  function markLinked(row, year) {
+    if (!eventLinks(year).length) return;
+    row.classList.add('is-linked');
+    row.dataset.year = year;
+    row.tabIndex = 0;
+    row.setAttribute('role', 'button');
+    row.setAttribute('aria-haspopup', 'menu');
+  }
+
+  /* Меню лежит в прокручиваемом теле фокуса: едет вместе со строкой и не вылезает на шапку. */
+  function openMenu(row, byKeyboard) {
+    var body = focusEl.querySelector('#tree-focus-body');
+    var frag = Screens.clone('tpl-tree-menu');
+    menuEl = frag.firstElementChild;
+    menuRow = row;
+    row.classList.add('is-open');
+
+    eventLinks(Number(row.dataset.year)).forEach(function (l) {
+      var item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'tree-menu__item';
+      item.setAttribute('role', 'menuitem');
+      item.dataset.link = l.section;
+      item.dataset.value = l.value;
+      item.textContent = l.label;
+      menuEl.appendChild(item);
     });
-    box.appendChild(frag);
+    body.appendChild(frag);
+
+    /* Сцена масштабирована: экранные координаты переводим в координаты сцены. */
+    var k = root.getBoundingClientRect().width / 1600;
+    var r = row.getBoundingClientRect();
+    var b = body.getBoundingClientRect();
+    var h = menuEl.offsetHeight;
+    var y = (r.bottom - b.top) / k + body.scrollTop + MENU_GAP;
+    if (y + h > body.scrollTop + body.clientHeight) {
+      y = Math.max(body.scrollTop, (r.top - b.top) / k + body.scrollTop - h - MENU_GAP);
+    }
+    menuEl.style.top = y + 'px';
+    menuEl.style.left = (r.right - b.left) / k - menuEl.offsetWidth + 'px';
+
+    document.addEventListener('click', onOutsideClick);
+    if (byKeyboard) menuEl.firstElementChild.focus();
+    if (hooks.pick) hooks.pick();
+  }
+
+  function closeMenu() {
+    if (!menuEl) return;
+    menuEl.remove();
+    menuRow.classList.remove('is-open');
+    menuEl = null;
+    menuRow = null;
+    document.removeEventListener('click', onOutsideClick);
+  }
+
+  /* Поля вокруг сцены: клики внутри раздела разбирает onClick. */
+  function onOutsideClick(e) {
+    if (!root.contains(e.target)) closeMenu();
   }
 
   /* Что запомнить, чтобы вернуться в фокус той же ветки на то же место. */
@@ -435,7 +499,9 @@ window.HistoryTree = (function () {
   }
 
   function followLink(btn) {
-    if (hooks.link) hooks.link(btn.dataset.link, Number(btn.dataset.value), snapshot());
+    var from = snapshot();
+    closeMenu();
+    if (hooks.link) hooks.link(btn.dataset.link, Number(btn.dataset.value), from);
   }
 
   function openPhoto(thumb) {
@@ -473,9 +539,8 @@ window.HistoryTree = (function () {
       el.classList.toggle('is-last', j === dated.length - 1);
       row.querySelector('[data-slot="year"]').textContent = it[0];
       row.querySelector('[data-slot="name"]').textContent = it[1];
-      var body = row.querySelector('[data-slot="body"]');
-      addDetail(body, it);
-      addLinks(body, yearOf(it[0]));
+      addDetail(row.querySelector('[data-slot="body"]'), it);
+      markLinked(el, yearOf(it[0]));
       rows.appendChild(row);
     });
 
@@ -518,6 +583,12 @@ window.HistoryTree = (function () {
     return frag.firstElementChild;
   }
 
+  /* Подсказка с полным названием — только если оно обрезано. */
+  function setNavName(el, title) {
+    el.textContent = title;
+    el.closest('button').title = el.scrollWidth > el.clientWidth ? title : '';
+  }
+
   function renderFocus() {
     var branches = window.HISTORY_DATA.branches;
     var n = branches.length;
@@ -525,12 +596,13 @@ window.HistoryTree = (function () {
     var slot = function (name) { return focusEl.querySelector('[data-slot="' + name + '"]'); };
     var fy = firstYear(b);
 
+    closeMenu();
     setColor(focusEl, b.type);
     slot('kicker').textContent = T.treeDirection + ' · ' + String(focus + 1).padStart(2, '0') + ' / ' + n + ' · ' +
       (fy !== null ? T.treeFirstEvent + ' ' + fy : T.treeStartPending);
     slot('title').textContent = b.title;
-    slot('prev').textContent = branches[(focus + n - 1) % n].title;
-    slot('next').textContent = branches[(focus + 1) % n].title;
+    setNavName(slot('prev'), branches[(focus + n - 1) % n].title);
+    setNavName(slot('next'), branches[(focus + 1) % n].title);
 
     var order = { n: 0 };
     var subs = b.subbranches || [];
@@ -663,10 +735,21 @@ window.HistoryTree = (function () {
       if (!el.closest('.tree-photo__img')) closePhoto();
       return;
     }
-    var thumb = el.closest('.tree-detail__thumb');
-    if (thumb) { openPhoto(thumb); return; }
     var link = el.closest('[data-link]');
     if (link) { followLink(link); return; }
+    if (el.closest('#tree-menu')) return;
+
+    /* Клик мимо закрывает меню и срабатывает как обычно; по той же строке — только закрывает. */
+    var wasOpen = menuRow;
+    closeMenu();
+
+    var thumb = el.closest('.tree-detail__thumb');
+    if (thumb) { openPhoto(thumb); return; }
+    var row = el.closest('.tree-event.is-linked');
+    if (row) {
+      if (row !== wasOpen) openMenu(row, false);
+      return;
+    }
     if (el.closest('#tree-reviews-all')) {
       if (hooks.link) hooks.link('reviews', window.HISTORY_DATA.branches[focus].title, snapshot());
       return;
@@ -731,6 +814,19 @@ window.HistoryTree = (function () {
     stopCamera();
     if (photoEl) {
       if (e.key === 'Escape') closePhoto();
+      return true;
+    }
+    if (menuEl && e.key === 'Escape') {
+      var openRow = menuRow;
+      closeMenu();
+      openRow.focus({ preventScroll: true });
+      return true;
+    }
+    var active = document.activeElement;
+    if ((e.key === 'Enter' || e.key === ' ') && active && active.matches('.tree-event.is-linked')) {
+      e.preventDefault();
+      closeMenu();
+      openMenu(active, true);
       return true;
     }
     if (focus !== null) {
