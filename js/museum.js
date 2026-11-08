@@ -191,10 +191,30 @@ window.Museum = (function () {
     if (card) showExhibit(Number(card.dataset.ex));
   }
 
-  function init(el, h) {
+  /* Годы зала из строки: '1930 — 1945' — диапазон, 'с 2010' — без конца, '1950' — один год. */
+  function yearRange(s) {
+    var m = String(s).match(/\d{4}/g);
+    if (!m) return null;
+    var from = Number(m[0]);
+    if (m[1]) return [from, Number(m[1])];
+    return [from, /^\s*с\s/i.test(s) ? Infinity : from];
+  }
+
+  /* Индекс зала с годом year или null. Год на границе двух залов относится к более позднему. */
+  function hallForYear(year) {
+    var found = null;
+    halls().forEach(function (h, i) {
+      var r = yearRange(h.years);
+      if (r && year >= r[0] && year <= r[1]) found = i;
+    });
+    return found;
+  }
+
+  /* startHall — необязательно: индекс зала, который открыть. */
+  function init(el, h, startHall) {
     root = el;
     hooks = h || {};
-    hall = 0;
+    hall = startHall || 0;
     ex = 0;
     root.addEventListener('click', onClick);
     showHall();
@@ -213,5 +233,5 @@ window.Museum = (function () {
     return false;
   }
 
-  return { init: init, key: key };
+  return { init: init, key: key, hallForYear: hallForYear };
 })();

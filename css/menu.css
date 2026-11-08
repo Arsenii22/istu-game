@@ -447,6 +447,9 @@
 }
 .chip:active{transform:translateY(1px)}
 .chip--plain{padding:0 22px}
+/* Возврат в фокус ветки: виден, только когда раздел открыт из дерева. */
+.chip--to-branch{display:none}
+.from-branch .chip--to-branch{display:flex}
 .chip__icon{
   fill:none;
   stroke:var(--c-blue);

@@ -163,6 +163,12 @@
         </svg>
         <span data-text="back"></span>
       </button>
+      <button class="chip chip--to-branch" type="button" data-go="branch">
+        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
+        </svg>
+        <span data-text="toBranch"></span>
+      </button>
       <div class="head__titles">
         <span class="head__kicker" data-text="galleryFull"></span>
         <span class="head__title" data-text="albumTitle"></span>
@@ -259,6 +265,12 @@
           <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
         </svg>
         <span data-text="back"></span>
+      </button>
+      <button class="chip chip--to-branch" type="button" data-go="branch">
+        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
+        </svg>
+        <span data-text="toBranch"></span>
       </button>
       <button class="chip chip--plain" type="button" id="viewer-close">
         <span data-text="toAlbum"></span>
@@ -461,6 +473,14 @@
   </div>
 </template>
 
+<!-- Связи события с другими разделами. Кнопка без подходящего года или зала скрыта. -->
+<template id="tpl-tree-links">
+  <div class="tree-links">
+    <button class="tree-link" type="button" data-link="gallery" data-text="treeLinkGallery"></button>
+    <button class="tree-link" type="button" data-link="museum" data-text="treeLinkMuseum"></button>
+  </div>
+</template>
+
 <template id="tpl-tree-photo">
   <div class="tree-photo" id="tree-photo">
     <button class="tree-card__close tree-photo__close" type="button" data-alt-text="treeCardClose">
@@ -484,6 +504,12 @@
           <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
         </svg>
         <span data-text="back"></span>
+      </button>
+      <button class="chip chip--to-branch" type="button" data-go="branch">
+        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
+        </svg>
+        <span data-text="toBranch"></span>
       </button>
       <div class="head__titles">
         <span class="head__kicker" data-text="museumTitle"></span>
@@ -550,6 +576,12 @@
           <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
         </svg>
         <span data-text="back"></span>
+      </button>
+      <button class="chip chip--to-branch" type="button" data-go="branch">
+        <svg class="chip__icon" width="22" height="22" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M23 14 H6 M13 7 L6 14 L13 21"></path>
+        </svg>
+        <span data-text="toBranch"></span>
       </button>
       <button class="chip chip--plain" type="button" id="btn-to-hall">
         <span data-text="toHall"></span>

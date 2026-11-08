@@ -75,6 +75,9 @@ window.CONFIG = {
     treeStartPending: 'год начала уточняется',
     treeMainBranch: 'Основная ветка',
     treePhotoOpen: 'Открыть фото крупно',
+    treeLinkGallery: 'Выпуски',
+    treeLinkMuseum: 'Музей',
+    toBranch: 'К ветке',
     eventForms: ['событие', 'события', 'событий'],
 
 

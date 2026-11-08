@@ -409,6 +409,34 @@ window.HistoryTree = (function () {
     box.appendChild(frag);
   }
 
+  /* Кнопки в другие разделы; если подходящего выпуска или зала нет, кнопки нет. */
+  function addLinks(box, year) {
+    var targets = { gallery: window.Gallery.nearestYear(year), museum: window.Museum.hallForYear(year) };
+    if (targets.gallery === null && targets.museum === null) return;
+
+    var frag = Screens.clone('tpl-tree-links');
+    frag.querySelectorAll('[data-link]').forEach(function (btn) {
+      var value = targets[btn.dataset.link];
+      btn.hidden = value === null;
+      btn.dataset.value = value;
+    });
+    box.appendChild(frag);
+  }
+
+  /* Что запомнить, чтобы вернуться в фокус той же ветки на то же место. */
+  function snapshot() {
+    return {
+      focus: focus,
+      origin: focusEl.dataset.origin.split(','),
+      body: focusEl.querySelector('#tree-focus-body').scrollTop,
+      tree: scroller.scrollTop,
+    };
+  }
+
+  function followLink(btn) {
+    if (hooks.link) hooks.link(btn.dataset.link, Number(btn.dataset.value), snapshot());
+  }
+
   function openPhoto(thumb) {
     var frag = Screens.clone('tpl-tree-photo');
     var img = frag.querySelector('[data-slot="img"]');
@@ -444,7 +472,9 @@ window.HistoryTree = (function () {
       el.classList.toggle('is-last', j === dated.length - 1);
       row.querySelector('[data-slot="year"]').textContent = it[0];
       row.querySelector('[data-slot="name"]').textContent = it[1];
-      addDetail(row.querySelector('[data-slot="body"]'), it);
+      var body = row.querySelector('[data-slot="body"]');
+      addDetail(body, it);
+      addLinks(body, yearOf(it[0]));
       rows.appendChild(row);
     });
 
@@ -495,6 +525,24 @@ window.HistoryTree = (function () {
     focusEl.querySelector('#tree-focus-body').scrollTop = 0;
   }
 
+  function mountFocus(index, origin) {
+    root.querySelector('.tree-screen').appendChild(Screens.clone('tpl-tree-focus'));
+    focusEl = root.querySelector('.tree-focus');
+    focusEl.dataset.origin = origin.join(',');
+    focus = index;
+    renderFocus();
+  }
+
+  /* Возврат из другого раздела: рост и раскрытие не проигрываем, всё сразу на прежнем месте. */
+  function restore(snap) {
+    canvas.classList.add('is-static');
+    scroller.scrollTop = snap.tree;
+    mountFocus(snap.focus, snap.origin);
+    focusEl.classList.add('is-static');
+    focusEl.style.clipPath = circle(2000, snap.origin);
+    focusEl.querySelector('#tree-focus-body').scrollTop = snap.body;
+  }
+
   function openFocus(type, e) {
     var index = window.HISTORY_DATA.branches.findIndex(function (b) { return b.type === type; });
     var origin = originOf(e);
@@ -505,12 +553,8 @@ window.HistoryTree = (function () {
     setHover(null);
     if (stage !== null) { stage = null; renderCard(); }
 
-    root.querySelector('.tree-screen').appendChild(Screens.clone('tpl-tree-focus'));
-    focusEl = root.querySelector('.tree-focus');
-    focusEl.dataset.origin = origin.join(',');
+    mountFocus(index, origin);
     focusEl.style.clipPath = circle(0, origin);
-    focus = index;
-    renderFocus();
 
     /* Два кадра: первое значение clip-path должно попасть в отрисовку, иначе перехода не будет. */
     var el = focusEl;
@@ -536,6 +580,7 @@ window.HistoryTree = (function () {
     if (focus === null) return;
     var n = window.HISTORY_DATA.branches.length;
     focus = (focus + delta + n) % n;
+    focusEl.classList.remove('is-static');
     renderFocus();
     if (hooks.step) hooks.step();
   }
@@ -586,6 +631,8 @@ window.HistoryTree = (function () {
     }
     var thumb = el.closest('.tree-detail__thumb');
     if (thumb) { openPhoto(thumb); return; }
+    var link = el.closest('[data-link]');
+    if (link) { followLink(link); return; }
 
     if (el.closest('#tree-focus-back')) { closeFocus(); return; }
     if (el.closest('#tree-focus-prev')) { stepFocus(-1); return; }
@@ -601,7 +648,8 @@ window.HistoryTree = (function () {
     if (branch) openFocus(branch.dataset.branch, e);
   }
 
-  function init(el, h) {
+  /* snap — необязательно: снимок snapshot(), чтобы вернуться в фокус ветки. */
+  function init(el, h, snap) {
     stopCamera();
     clearTimeout(closeTimer);
     root = el;
@@ -635,7 +683,8 @@ window.HistoryTree = (function () {
       root.addEventListener(name, stopCamera, { passive: true, capture: true });
     });
 
-    startCamera();
+    if (snap) restore(snap);
+    else startCamera();
   }
 
   var SCROLL_KEYS = { ArrowUp: -80, ArrowDown: 80, PageUp: -600, PageDown: 600 };

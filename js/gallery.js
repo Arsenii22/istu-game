@@ -7,6 +7,7 @@ window.Gallery = (function () {
   var WIN = 9;          /* сколько лет помещается на шкале */
   var FLIP_MS = 820;
   var PER_PAGE = 3;     /* фото на обычной странице; на титульной — одно */
+  var NEAR = 5;         /* на сколько лет выпуск может отстоять от события истории */
 
   var T = window.CONFIG.texts;
 
@@ -299,7 +300,20 @@ window.Gallery = (function () {
     if (el.closest('#album-next, #corner-next')) { flip(1); }
   }
 
-  function init(el, h) {
+  /* Ближайший к year выпуск в пределах NEAR лет или null. При равенстве — более ранний. */
+  function nearestYear(year) {
+    var best = null;
+    window.GALLERY_DATA.forEach(function (g) {
+      var d = Math.abs(g.year - year);
+      if (d > NEAR) return;
+      var bd = best === null ? Infinity : Math.abs(best - year);
+      if (d < bd || (d === bd && g.year < best)) best = g.year;
+    });
+    return best;
+  }
+
+  /* startYear — необязательно: с какого выпуска открыть альбом. */
+  function init(el, h, startYear) {
     clearTimeout(timer);
     root = el;
     hooks = h || {};
@@ -308,6 +322,11 @@ window.Gallery = (function () {
     dir = 0;
     win = 0;
     view = null;
+    var yi = years.findIndex(function (y) { return y.year === startYear; });
+    if (yi >= 0) {
+      cur = firstSpreadOf(yi);
+      ensureVisible(yi);
+    }
     root.addEventListener('click', onClick);
     renderSpread();
   }
@@ -324,5 +343,5 @@ window.Gallery = (function () {
     return false;
   }
 
-  return { init: init, key: key };
+  return { init: init, key: key, nearestYear: nearestYear };
 })();

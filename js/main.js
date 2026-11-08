@@ -6,6 +6,7 @@
 
   var sound = false;
   var audio = null;
+  var branchSnap = null;   /* раздел открыт из фокуса ветки: куда вернуться, иначе null */
 
   /* Отдельных звуковых файлов нет — короткий писк синтезируется осциллятором. */
   function blip(freq = 660, dur = 0.06, type = 'sine', vol = 0.06) {
@@ -32,41 +33,56 @@
   function show(name, mode) {
     S.show(name, mode);
     S.setSound(sound);
+    /* Класс показывает кнопку «К ветке» в шапках раздела, включая вложенные экраны. */
+    document.getElementById('screen-slot').classList.toggle('from-branch', !!branchSnap);
   }
 
   function goMenu() {
     blip(440);
+    branchSnap = null;
     show('menu');
+  }
+
+  function backToBranch() {
+    var snap = branchSnap;
+    blip(440);
+    branchSnap = null;
+    SECTIONS.history(snap);
   }
 
   /* Разделы, у которых уже есть свой экран; остальные пока ведут на заглушку «Скоро». */
   var SECTIONS = {
-    gallery: function () {
+    gallery: function (startYear) {
       show('gallery');
       window.Gallery.init(document.querySelector('.gallery'), {
         flip: function () { blip(520, 0.12, 'triangle', 0.04); },
         open: function () { blip(880, 0.08); },
         close: function () { blip(440); },
         step: function () { blip(660, 0.05); },
-      });
+      }, startYear);
     },
-    history: function () {
+    history: function (snap) {
       show('history');
       window.HistoryTree.init(document.getElementById('history'), {
         pick: function () { blip(700, 0.05); },
         open: function () { blip(880, 0.08); },
         close: function () { blip(440); },
         step: function () { blip(660, 0.05); },
-      });
+        link: function (section, value, from) {
+          blip(880, 0.1);
+          branchSnap = from;
+          SECTIONS[section](value);
+        },
+      }, snap);
     },
-    museum: function () {
+    museum: function (startHall) {
       show('museum');
       window.Museum.init(document.getElementById('museum'), {
         pick: function () { blip(700, 0.05); },
         open: function () { blip(880, 0.08); },
         close: function () { blip(440); },
         step: function () { blip(660, 0.05); },
-      });
+      }, startHall);
     },
     reviews: function () {
       show('reviews');
@@ -121,6 +137,7 @@
     if (mode) { openMode(mode.dataset.mode); return; }
 
     if (el.closest('#btn-back, [data-go="menu"]')) { goMenu(); return; }
+    if (el.closest('[data-go="branch"]')) { backToBranch(); return; }
     if (el.closest('[data-go="reviews"]')) { blip(440); SECTIONS.reviews(); return; }
     if (el.closest('#btn-about')) { openAbout(); return; }
     if (el.closest('#btn-sound')) { toggleSound(); return; }
@@ -132,7 +149,7 @@
   });
 
   /* mouseover, в отличие от mouseenter, всплывает; отсеиваем перемещения внутри кнопки. */
-  var HOVER_SELECTOR = '.mode, #btn-back, #btn-about, #btn-about-ok, .chip, .round, .viewer__all, .pair__btn, .btn-write, .feed__more-btn, .rform__submit, .thanks__primary, .thanks__again, .tree-stage, .tree-label, .tree-card__row, .tree-focus__nav, .tree-detail__thumb';
+  var HOVER_SELECTOR = '.mode, #btn-back, #btn-about, #btn-about-ok, .chip, .round, .viewer__all, .pair__btn, .btn-write, .feed__more-btn, .rform__submit, .thanks__primary, .thanks__again, .tree-stage, .tree-label, .tree-card__row, .tree-focus__nav, .tree-detail__thumb, .tree-link';
   document.addEventListener('mouseover', function (e) {
     var el = e.target.closest(HOVER_SELECTOR);
     if (!el) return;
@@ -159,6 +176,7 @@
 
     if (e.key !== 'Escape') return;
     if (S.isAboutOpen()) closeAbout();
+    else if (branchSnap) backToBranch();
     else if (screen !== 'menu' && screen !== 'loading') goMenu();
   });
 
