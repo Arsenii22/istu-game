@@ -395,3 +395,131 @@
 }
 .thumb:hover{transform:translateY(-3px)}
 .thumb.is-active{border-color:var(--c-blue);box-shadow:0 0 0 4px var(--c-glow)}
+
+/* Мобильный режим: шкала лет — лента с прокруткой, альбом — одна страница,
+   под ней кнопки листания и подвал. Просмотр фото — отдельной страницей. */
+@media (max-width:759.98px){
+  .gallery{
+    position:relative;
+    inset:auto;
+    min-height:100vh;
+    min-height:100dvh;
+    display:grid;
+    grid-template-columns:52px minmax(0,1fr) 52px;
+    grid-template-areas:"head head head" "tl tl tl" "album album album" "prev foot next";
+    align-content:start;
+    gap:14px 8px;
+    padding:0 16px 24px;
+  }
+  .gallery > .head{grid-area:head;margin:0 -16px}
+
+  .tl{grid-area:tl;position:relative;left:auto;right:auto;top:auto;height:auto;gap:0;padding:0;border-radius:14px;overflow:hidden}
+  .tl > .round{display:none}
+  .tl__track{height:84px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain}
+  .tl__track::-webkit-scrollbar{display:none}
+  .tl__line{display:none}
+  /* Линия шкалы рисуется фоном ряда — так она тянется на всю прокручиваемую ширину. */
+  .tl__years{
+    width:max-content;
+    min-width:100%;
+    justify-content:flex-start;
+    padding:0 8px;
+    background:linear-gradient(var(--c-line), var(--c-line)) 0 31px / 100% 2px no-repeat;
+  }
+  .tl__year{flex:none;width:76px;padding-top:20px;gap:8px}
+  .tl__label{font-size:16px}
+  .tl__year.is-active .tl__label{font-size:20px}
+
+  .album{
+    grid-area:album;
+    position:relative;
+    left:auto;
+    top:auto;
+    width:auto;
+    height:auto;
+    aspect-ratio:3 / 4;
+    max-height:70vh;
+    perspective:none;
+    touch-action:pan-y;
+  }
+  .album__half--r,
+  .album__under,
+  .album__spine,
+  .album__leaf,
+  .album__corner{display:none}
+  .album__half--l{width:auto;right:1.5px;border-radius:13px}
+
+  .album__nav{position:static;align-self:center}
+  .album__nav--prev{grid-area:prev}
+  .album__nav--next{grid-area:next}
+  .album-foot{grid-area:foot;position:static;flex-direction:column;gap:6px;text-align:center}
+  .album-foot__year{font-size:16px}
+  .album-foot__spread{font-size:15px}
+  .album-foot__no{display:none}
+
+  .page{gap:10px;padding:18px 18px 16px}
+  .page__top{font-size:15px;letter-spacing:.1em}
+  .page__year{font-size:60px}
+  .page__meta,
+  .page__caption{font-size:15px}
+  .photo{font-size:15px}
+  .photo:hover{box-shadow:none}
+  .photo--big{flex:1.4;height:auto}
+  .page__row{gap:10px}
+  .page--from-right{animation:pp-from-right .28s ease-out both}
+  .page--from-left{animation:pp-from-left .28s ease-out both}
+
+  /* Просмотр фото: на весь экран, снимок во всю ширину, подпись и направление под ним. */
+  .gallery.is-viewing > :not(.viewer){display:none}
+  .viewer{
+    position:relative;
+    inset:auto;
+    grid-column:1 / -1;
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"head" "frame" "info" "thumbs";
+    align-content:start;
+    gap:14px;
+    margin:0 -16px;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+  .viewer .head{grid-area:head}
+  .viewer__titles{padding-left:0}
+  .head:has(.chip--plain) .head__mark{display:none}
+  .viewer__frame{
+    grid-area:frame;
+    position:relative;
+    left:auto;
+    top:auto;
+    width:auto;
+    height:auto;
+    aspect-ratio:4 / 3;
+    max-height:62vh;
+    border-width:1.5px 0;
+    border-radius:0;
+    font-size:17px;
+    touch-action:pan-y;
+  }
+  .viewer__nav{grid-area:frame;position:relative;top:auto;left:auto;align-self:center;z-index:1;width:48px;height:48px}
+  .viewer__nav--prev{justify-self:start;margin-left:10px}
+  .viewer__nav--next{justify-self:end;margin-right:10px}
+  .viewer__info{
+    grid-area:info;
+    position:static;
+    height:auto;
+    gap:12px;
+    margin:0 16px;
+    padding:20px 18px;
+  }
+  .viewer__num{font-size:15px}
+  .viewer__name{font-size:22px}
+  .viewer__caption{font-size:16px;overflow:visible}
+  .viewer__label{font-size:15px}
+  .viewer__value{font-size:17px}
+  .viewer__spacer,
+  .viewer__all{display:none}
+  .viewer__thumbs{grid-area:thumbs;position:static;height:auto;gap:10px;padding:6px 16px 24px;scrollbar-width:none}
+  .thumb{flex:0 0 84px;height:64px;font-size:15px}
+  .thumb:hover{transform:none}
+}

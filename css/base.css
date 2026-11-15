@@ -33,3 +33,5 @@ button{font:inherit;color:inherit}
 @media (max-width:759.98px){
   html,body{height:auto;min-height:100%;overflow:visible;background:var(--c-bg)}
 }
+@keyframes pp-from-right{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes pp-from-left{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}

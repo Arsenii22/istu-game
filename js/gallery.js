@@ -22,6 +22,12 @@ window.Gallery = (function () {
   var timer = null;
   var view = null;      /* открытое фото: { yi, index }, null — просмотр закрыт */
 
+  /* Мобильный режим: вместо разворотов — по одной странице, cur — индекс в pages. */
+  var mobile = false;
+  var pages = [];       /* все страницы альбома подряд: { y, pn } */
+  var swiped = 0;       /* время последнего свайпа: клик сразу после него не открывает фото */
+  var viewScroll = 0;   /* где была страница до открытия фото */
+
   function pad(n) { return String(n).padStart(2, '0'); }
 
   /* Раскладка по страницам: титульная с первым фото, дальше по PER_PAGE фото на страницу. */
@@ -41,6 +47,18 @@ window.Gallery = (function () {
 
   function firstSpreadOf(yi) {
     for (var i = 0; i < spreads.length; i++) if (spreads[i].y === yi) return i;
+    return 0;
+  }
+
+  function buildPages() {
+    pages = [];
+    years.forEach(function (y, yi) {
+      y.pages.forEach(function (p, pn) { pages.push({ y: yi, pn: pn }); });
+    });
+  }
+
+  function firstPageOf(yi) {
+    for (var i = 0; i < pages.length; i++) if (pages[i].y === yi) return i;
     return 0;
   }
 
@@ -74,12 +92,9 @@ window.Gallery = (function () {
     putPhoto(btn, photo, T.photoStub + ' ' + y.year);
   }
 
-  function makePage(idx, side) {
-    var sp = spreads[idx];
-    if (!sp) return Screens.clone('tpl-page-end');
-
-    var y = years[sp.y];
-    var pn = sp.k * 2 + (side === 'R' ? 1 : 0);
+  /* Страница pn года yi. parts — «3 разворота» для титульной, total — сколько страниц у года. */
+  function pageFrag(yi, pn, parts, total) {
+    var y = years[yi];
     var page = y.pages[pn];
     var frag;
     var slot = function (name) { return frag.querySelector('[data-slot="' + name + '"]'); };
@@ -87,22 +102,29 @@ window.Gallery = (function () {
     if (page && page.title) {
       frag = Screens.clone('tpl-page-title');
       var count = y.photos.length;
-      slot('num').textContent = pad(sp.y + 1) + ' / ' + pad(years.length);
+      slot('num').textContent = pad(yi + 1) + ' / ' + pad(years.length);
       slot('year').textContent = y.year;
-      slot('meta').textContent = sp.n + ' ' + Screens.plural(sp.n, T.spreadForms) + ' · ' +
-        count + ' ' + Screens.plural(count, T.photoForms);
-      fillPhoto(slot('photo0'), sp.y, 0);
+      slot('meta').textContent = parts + ' · ' + count + ' ' + Screens.plural(count, T.photoForms);
+      fillPhoto(slot('photo0'), yi, 0);
       slot('caption').textContent = y.photos[0] ? y.photos[0].caption : '';
     } else {
       /* Нечётное число страниц: последняя правая страница года остаётся пустой, с одной шапкой. */
       var start = page ? page.start : y.photos.length;
       frag = Screens.clone('tpl-page-photos');
       slot('release').textContent = T.release + ' ' + y.year;
-      slot('num').textContent = T.pageShort + ' ' + pad(pn + 1) + ' / ' + pad(sp.n * 2);
-      for (var i = 0; i < PER_PAGE; i++) fillPhoto(slot('photo' + i), sp.y, start + i);
+      slot('num').textContent = T.pageShort + ' ' + pad(pn + 1) + ' / ' + pad(total);
+      for (var i = 0; i < PER_PAGE; i++) fillPhoto(slot('photo' + i), yi, start + i);
       slot('caption').textContent = y.photos[start] ? y.photos[start].caption : '';
     }
+    return frag;
+  }
 
+  function makePage(idx, side) {
+    var sp = spreads[idx];
+    if (!sp) return Screens.clone('tpl-page-end');
+
+    var pn = sp.k * 2 + (side === 'R' ? 1 : 0);
+    var frag = pageFrag(sp.y, pn, sp.n + ' ' + Screens.plural(sp.n, T.spreadForms), sp.n * 2);
     frag.firstElementChild.classList.add(side === 'L' ? 'page--l' : 'page--r');
     return frag;
   }
@@ -114,26 +136,39 @@ window.Gallery = (function () {
   /* Год, который показываем на шкале и в подвале: во время перелистывания — уже тот, куда листаем. */
   function target() { return spreads[cur + dir]; }
 
+  function yearButton(i, active) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tl__year' + (i === active ? ' is-active' : '');
+    b.dataset.yi = i;
+    b.innerHTML = '<span class="tl__dot"></span><span class="tl__label"></span>';
+    b.lastChild.textContent = years[i].year;
+    return b;
+  }
+
+  /* В мобильном режиме на шкале все годы, она прокручивается пальцем; выбранный год — по центру. */
+  function renderStrip() {
+    var active = pages[cur].y;
+    var box = root.querySelector('#tl-years');
+    if (!box.children.length) years.forEach(function (y, i) { box.appendChild(yearButton(i, active)); });
+    Array.prototype.forEach.call(box.children, function (b, i) { b.classList.toggle('is-active', i === active); });
+    Screens.centerIn(root.querySelector('.tl__track'), box.children[active]);
+  }
+
   function renderTimeline() {
+    if (mobile) { renderStrip(); return; }
     var active = target().y;
     var box = root.querySelector('#tl-years');
     box.replaceChildren();
 
-    for (var i = win; i < Math.min(years.length, win + WIN); i++) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'tl__year' + (i === active ? ' is-active' : '');
-      b.dataset.yi = i;
-      b.innerHTML = '<span class="tl__dot"></span><span class="tl__label"></span>';
-      b.lastChild.textContent = years[i].year;
-      box.appendChild(b);
-    }
+    for (var i = win; i < Math.min(years.length, win + WIN); i++) box.appendChild(yearButton(i, active));
 
     root.querySelector('#tl-prev').disabled = win === 0;
     root.querySelector('#tl-next').disabled = win >= years.length - WIN;
   }
 
   function renderFoot() {
+    if (mobile) { renderPageFoot(); return; }
     var t = target();
     root.querySelector('#foot-year').textContent = T.release + ' ' + years[t.y].year;
     root.querySelector('#foot-spread').textContent = T.spread + ' ' + (t.k + 1) + ' ' + T.of + ' ' + t.n;
@@ -148,9 +183,26 @@ window.Gallery = (function () {
     }
   }
 
+  /* Подвал мобильного альбома: выпуск, точки страниц года и «Страница 2 из 3». */
+  function renderPageFoot() {
+    var p = pages[cur];
+    var n = years[p.y].pages.length;
+    root.querySelector('#foot-year').textContent = T.release + ' ' + years[p.y].year;
+    root.querySelector('#foot-spread').textContent = T.page + ' ' + (p.pn + 1) + ' ' + T.of + ' ' + n;
+    root.querySelector('#foot-no').textContent = T.yearShort + ' ' + pad(p.y + 1) + ' / ' + pad(years.length);
+
+    var dots = root.querySelector('#foot-dots');
+    dots.replaceChildren();
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement('span');
+      d.className = 'album-foot__dot' + (i === p.pn ? ' is-active' : '');
+      dots.appendChild(d);
+    }
+  }
+
   function renderNav() {
     var atStart = cur === 0;
-    var atEnd = cur === spreads.length - 1;
+    var atEnd = cur === (mobile ? pages : spreads).length - 1;
     root.querySelector('#album-prev').disabled = atStart;
     root.querySelector('#corner-prev').disabled = atStart;
     root.querySelector('#album-next').disabled = atEnd;
@@ -207,7 +259,29 @@ window.Gallery = (function () {
     }, FLIP_MS);
   }
 
+  /* Мобильный альбом: одна страница; новая въезжает с той стороны, куда листаем. */
+  function renderPage(d) {
+    var p = pages[cur];
+    var n = years[p.y].pages.length;
+    var frag = pageFrag(p.y, p.pn, n + ' ' + Screens.plural(n, T.pageForms), n);
+    var page = frag.firstElementChild;
+    if (d) page.classList.add(d > 0 ? 'page--from-right' : 'page--from-left');
+    root.querySelector('#page-l').replaceChildren(frag);
+    renderTimeline();
+    renderFoot();
+    renderNav();
+  }
+
+  function turn(d) {
+    var nx = cur + d;
+    if (nx < 0 || nx >= pages.length) return;
+    cur = nx;
+    renderPage(d);
+    if (hooks.flip) hooks.flip();
+  }
+
   function selectYear(yi) {
+    if (mobile) { cur = firstPageOf(yi); renderPage(0); return; }
     if (dir) return;
     cur = firstSpreadOf(yi);
     ensureVisible(yi);
@@ -248,13 +322,21 @@ window.Gallery = (function () {
       thumbs.appendChild(b);
     });
     var active = thumbs.querySelector('.is-active');
-    if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    /* scrollIntoView в мобильном режиме прокрутил бы к миниатюрам и саму страницу. */
+    if (active && mobile) Screens.centerIn(thumbs, active);
+    else if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
+  /* В мобильном режиме фото открывается отдельной страницей, альбом под ним скрыт. */
   function openView(yi, index) {
     view = { yi: yi, index: index };
+    viewScroll = window.scrollY;
     root.appendChild(Screens.clone('tpl-viewer'));
     root.classList.add('is-viewing');
+    if (mobile) {
+      window.scrollTo(0, 0);
+      Screens.swipe(root.querySelector('#viewer-frame'), function (d) { swiped = Date.now(); step(d); });
+    }
     renderView();
     if (hooks.open) hooks.open();
   }
@@ -263,6 +345,7 @@ window.Gallery = (function () {
     view = null;
     root.querySelector('#viewer').remove();
     root.classList.remove('is-viewing');
+    if (mobile) window.scrollTo(0, viewScroll);
     if (hooks.close) hooks.close();
   }
 
@@ -287,6 +370,7 @@ window.Gallery = (function () {
 
   function onClick(e) {
     var el = e.target;
+    if (Date.now() - swiped < 400) return;
     if (view) { onViewerClick(el); return; }
 
     var photo = el.closest('.photo');
@@ -296,8 +380,8 @@ window.Gallery = (function () {
     if (year) { selectYear(Number(year.dataset.yi)); return; }
     if (el.closest('#tl-prev')) { shiftWindow(-1); return; }
     if (el.closest('#tl-next')) { shiftWindow(1); return; }
-    if (el.closest('#album-prev, #corner-prev')) { flip(-1); return; }
-    if (el.closest('#album-next, #corner-next')) { flip(1); }
+    if (el.closest('#album-prev, #corner-prev')) { (mobile ? turn : flip)(-1); return; }
+    if (el.closest('#album-next, #corner-next')) { (mobile ? turn : flip)(1); }
   }
 
   /* Ближайший к year выпуск в пределах NEAR лет или null. При равенстве — более ранний. */
@@ -322,12 +406,22 @@ window.Gallery = (function () {
     dir = 0;
     win = 0;
     view = null;
+    mobile = Screens.isMobile();
     var yi = years.findIndex(function (y) { return y.year === startYear; });
+    root.addEventListener('click', onClick);
+
+    if (mobile) {
+      buildPages();
+      if (yi >= 0) cur = firstPageOf(yi);
+      Screens.swipe(root.querySelector('#album'), function (d) { swiped = Date.now(); turn(d); });
+      renderPage(0);
+      return;
+    }
+
     if (yi >= 0) {
       cur = firstSpreadOf(yi);
       ensureVisible(yi);
     }
-    root.addEventListener('click', onClick);
     renderSpread();
   }
 
@@ -339,7 +433,7 @@ window.Gallery = (function () {
       if (d) { step(d); return true; }
       return false;
     }
-    if (d) { flip(d); return true; }
+    if (d) { (mobile ? turn : flip)(d); return true; }
     return false;
   }
 

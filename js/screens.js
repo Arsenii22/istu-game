@@ -246,6 +246,35 @@ window.Screens = (function () {
       on ? window.CONFIG.texts.soundOn : window.CONFIG.texts.soundOff;
   }
 
+  /* Свайп влево-вправо по элементу: fn(1) — к следующему, fn(-1) — к предыдущему.
+     Вертикальную прокрутку страницы оставляем браузеру (touch-action: pan-y в CSS). */
+  var SWIPE = 40;   /* минимальный сдвиг пальца, px */
+
+  function swipe(el, fn) {
+    var x0 = null;
+    var y0 = 0;
+    el.addEventListener('pointerdown', function (e) {
+      if (!e.isPrimary) return;
+      x0 = e.clientX;
+      y0 = e.clientY;
+    });
+    el.addEventListener('pointerup', function (e) {
+      if (x0 === null) return;
+      var dx = e.clientX - x0;
+      var dy = e.clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy) * 1.5) fn(dx < 0 ? 1 : -1);
+    });
+    el.addEventListener('pointercancel', function () { x0 = null; });
+  }
+
+  /* Прокручивает горизонтальную ленту box так, чтобы item оказался посередине. */
+  function centerIn(box, item) {
+    if (!box || !item) return;
+    var left = item.offsetLeft - (box.clientWidth - item.offsetWidth) / 2;
+    box.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+  }
+
   function openAbout() { mount('modal-slot', 'tpl-about'); }
   function closeAbout() { mount('modal-slot', null); }
   function isAboutOpen() { return !!document.getElementById('about-overlay'); }
@@ -260,6 +289,8 @@ window.Screens = (function () {
     clone: clone,
     checkDirections: checkDirections,
     plural: plural,
+    swipe: swipe,
+    centerIn: centerIn,
     currentScreen: function () { return current; },
     setProgress: setProgress,
     setSound: setSound,
