@@ -161,6 +161,24 @@ function known(row, col, names, errors) {
   return false;
 }
 
+/* Дата в виде ГГГГ-ММ-ДД. Excel при сохранении переделывает её в ДД.ММ.ГГГГ (иногда
+   без ведущих нулей: 4.8.2026) — принимаем и такую. Пустая остаётся пустой (её ловит
+   проверка обязательных колонок), неверная или несуществующая дата — null. */
+function normDate(v) {
+  if (v === '') return '';
+  let m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  let y, mo, d;
+  if (m) { y = m[1]; mo = m[2]; d = m[3]; }
+  else {
+    m = v.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if (!m) return null;
+    y = m[3]; mo = m[2].padStart(2, '0'); d = m[1].padStart(2, '0');
+  }
+  const t = new Date(Date.UTC(Number(y), Number(mo) - 1, Number(d)));
+  if (t.getUTCMonth() !== Number(mo) - 1 || t.getUTCDate() !== Number(d)) return null;   /* 31.02, 13-й месяц */
+  return y + '-' + mo + '-' + d;
+}
+
 /* Есть ли файл — с учётом регистра букв: GitHub Pages различает «Foto.jpg» и «foto.jpg». */
 function fileExists(rel) {
   let dir = ROOT;
@@ -276,9 +294,9 @@ function build(texts, errors) {
   const reviews = [];
   t.reviews.forEach((r) => {
     const ok = [required(r, ['имя', 'год', 'направление', 'дата', 'текст'], errors), year4(r, 'год', errors), known(r, 'направление', titles, errors)];
-    const date = r.get('дата');
-    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      errors.push(where(r) + 'дата «' + date + '» — нужен вид ГГГГ-ММ-ДД, например 2026-10-24');
+    const date = normDate(r.get('дата'));
+    if (date === null) {
+      errors.push(where(r) + 'дата «' + r.get('дата') + '» не распознана: нужен вид ГГГГ-ММ-ДД или ДД.ММ.ГГГГ, например 2026-10-24 или 24.10.2026, и такой день должен быть в календаре');
       ok.push(false);
     }
     const v = r.get('фото');
