@@ -26,3 +26,8 @@
 *.ttf   binary
 *.otf   binary
 *.eot   binary
+
+# Таблицы данных — байт в байт: BOM и CRLF нужны русскому Excel.
+*.csv   -text
+# Запуск двойным щелчком в Windows — с CRLF.
+*.cmd   text eol=crlf
