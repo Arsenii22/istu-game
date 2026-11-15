@@ -412,6 +412,33 @@
 .about__ok:active{transform:translateY(1px)}
 
 
+/* Переход между разделами (js/screens.js, boardTransition): старый экран поверх нового
+   стирается шторкой, вдоль её края бегут дорожки платы. Слой не ловит клики. */
+.fx{position:absolute;inset:0;z-index:50;pointer-events:none;overflow:hidden}
+.fx__old{position:absolute;inset:0;overflow:hidden;background:var(--c-bg)}
+/* Перенос в слой заново запустил бы анимации появления старого экрана — оставляем его как был. */
+.fx__old *{animation:none!important;transition:none!important}
+.fx__traces{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.fx__trace{fill:none;stroke:var(--c-blue);stroke-opacity:.28;stroke-width:1.5;opacity:0}
+.fx__pulse{
+  fill:none;
+  stroke:var(--c-blue);
+  stroke-width:3;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 0 6px var(--c-blue));
+}
+.fx__pulse--teal{stroke:var(--c-teal);filter:drop-shadow(0 0 6px var(--c-teal))}
+.fx__front{
+  position:absolute;
+  left:-2px;
+  top:0;
+  bottom:0;
+  width:4px;
+  background:linear-gradient(transparent, var(--c-blue) 18%, var(--c-teal) 50%, var(--c-blue) 82%, transparent);
+  box-shadow:0 0 18px 4px var(--c-glow);
+}
+
 /* Общие детали разделов: шапка с кнопкой «Назад в меню», кнопки-плашки и круглые кнопки. */
 
 .head{

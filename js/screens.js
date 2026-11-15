@@ -243,8 +243,143 @@ window.Screens = (function () {
     slot.appendChild(clone(tplId));
   }
 
+  /* Переход между разделами.
+
+     Компьютер — «плата»: новый экран сразу на месте и сразу принимает клики, а старый
+     на FX_MS лежит поверх него в слое .fx и стирается шторкой; вдоль края шторки по
+     экрану пробегают дорожки с импульсами. Вглубь (из меню в раздел) шторка идёт слева
+     направо, назад в меню — справа налево. Телефон — облегчённый вариант: новый экран
+     проявляется. При prefers-reduced-motion перехода нет. Всё на Web Animations API,
+     цвета — из переменных темы, поэтому работает в обеих темах. */
+
+  var FX_MS = 460;
+  var FX_EASE = 'cubic-bezier(.65,0,.35,1)';
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var fx = null;   /* идущий переход: { el, anims } */
+
+  /* Дорожки перехода: горизонтальные линии с изломами под 45°, как на плате. */
+  var FX_TRACES = [
+    { y: 92, j: [[260, -1], [980, 1]] },
+    { y: 196, j: [[520, 1], [1240, -1]] },
+    { y: 300, j: [[180, 1], [760, -1], [1380, 1]] },
+    { y: 418, j: [[420, -1], [1100, 1]] },
+    { y: 520, j: [[300, 1], [900, 1], [1300, -1]] },
+    { y: 636, j: [[640, -1], [1180, -1]] },
+    { y: 742, j: [[220, -1], [820, 1]] },
+    { y: 830, j: [[480, 1], [1420, -1]] },
+  ];
+  var FX_JOG = 34;   /* высота излома */
+
+  function tracePath(t) {
+    var y = t.y;
+    var d = 'M-40 ' + y;
+    t.j.forEach(function (p) {
+      d += ' H' + p[0] + ' L' + (p[0] + FX_JOG) + ' ' + (y + p[1] * FX_JOG);
+      y += p[1] * FX_JOG;
+    });
+    return d + ' H1640';
+  }
+
+  function endFx() {
+    if (!fx) return;
+    fx.anims.forEach(function (a) { a.cancel(); });
+    fx.el.remove();
+    fx = null;
+  }
+
+  /* old — узлы старого экрана (и угла с кнопками, если он исчезает); back — назад в меню. */
+  function boardTransition(old, back) {
+    var el = document.createElement('div');
+    el.className = 'fx';
+    el.inert = true;
+    el.setAttribute('aria-hidden', 'true');
+
+    /* Старый экран — со своим фоном сцены, иначе сквозь него просвечивал бы новый. */
+    var oldBox = document.createElement('div');
+    oldBox.className = 'fx__old';
+    if (document.getElementById('screen-slot').classList.contains('from-branch')) oldBox.classList.add('from-branch');
+    var bg = document.getElementById('bg').cloneNode(true);
+    bg.removeAttribute('id');
+    oldBox.appendChild(bg);
+    old.forEach(function (n) { oldBox.appendChild(n); });
+    el.appendChild(oldBox);
+
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'fx__traces');
+    svg.setAttribute('viewBox', '0 0 1600 900');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    el.appendChild(svg);
+
+    var front = document.createElement('div');
+    front.className = 'fx__front';
+    el.appendChild(front);
+
+    /* Слой — сразу после слота экрана: getElementById по-прежнему находит новый экран первым. */
+    document.getElementById('screen-slot').after(el);
+
+    var anims = [];
+    var timing = { duration: FX_MS, easing: FX_EASE, fill: 'forwards' };
+    anims.push(oldBox.animate(
+      back ? [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 100% 0 0)' }]
+           : [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 100%)' }], timing));
+    anims.push(front.animate(
+      back ? [{ transform: 'translateX(1600px)', opacity: 1 }, { transform: 'translateX(0)', opacity: .2 }]
+           : [{ transform: 'translateX(0)', opacity: 1 }, { transform: 'translateX(1600px)', opacity: .2 }], timing));
+
+    FX_TRACES.forEach(function (t, i) {
+      var d = tracePath(t);
+      var base = document.createElementNS(SVG_NS, 'path');
+      base.setAttribute('d', d);
+      base.setAttribute('class', 'fx__trace');
+      var pulse = document.createElementNS(SVG_NS, 'path');
+      pulse.setAttribute('d', d);
+      pulse.setAttribute('class', 'fx__pulse' + (i % 3 === 1 ? ' fx__pulse--teal' : ''));
+      svg.append(base, pulse);
+
+      var len = pulse.getTotalLength();
+      var seg = 220;
+      pulse.style.strokeDasharray = seg + ' ' + (len + seg);
+      /* Импульс бежит вместе со шторкой; дорожки чуть разнесены по времени. */
+      var delay = (i * 37) % 70;
+      var from = back ? -len : seg;
+      var to = back ? seg : -len;
+      anims.push(pulse.animate([{ strokeDashoffset: from }, { strokeDashoffset: to }],
+        { duration: FX_MS - delay, delay: delay, easing: FX_EASE, fill: 'both' }));
+      anims.push(base.animate([{ opacity: 0 }, { opacity: 1, offset: .35 }, { opacity: 0 }],
+        { duration: FX_MS, easing: 'ease-out', fill: 'forwards' }));
+    });
+
+    fx = { el: el, anims: anims };
+    var mine = fx;
+    anims[0].finished.then(function () { if (fx === mine) endFx(); }, function () {});
+  }
+
+  /* Мобильный вариант: новый экран проявляется. Только прозрачность: сдвиг сломал бы
+     position:fixed внутри экрана (плавающая кнопка «Оставить отзыв»). */
+  function fadeIn() {
+    var anims = [];
+    Array.prototype.forEach.call(document.getElementById('screen-slot').children, function (n) {
+      anims.push(n.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'ease-out' }));
+    });
+    fx = { el: document.createElement('div'), anims: anims };
+  }
+
   /* Экран каждый раз монтируется заново, поэтому анимация появления проигрывается при каждом входе. */
   function show(name, mode) {
+    var prev = current;
+    var animate = prev && prev !== name && !REDUCE.matches;
+    endFx();
+
+    /* Старый экран не удаляем, а переносим в слой перехода — до монтирования нового. */
+    var old = [];
+    if (animate && !isMobile()) {
+      old = Array.prototype.slice.call(document.getElementById('screen-slot').childNodes);
+      if (WITH_CORNER.indexOf(name) < 0) {
+        old = old.concat(Array.prototype.slice.call(document.getElementById('corner-slot').childNodes));
+      }
+      old.forEach(function (n) { n.remove(); });
+    }
+
     current = name;
     applyLayout();
     mount('screen-slot', 'tpl-' + name);
@@ -259,6 +394,10 @@ window.Screens = (function () {
 
     if (WITH_CORNER.indexOf(name) < 0) mount('corner-slot', null);
     else if (!document.getElementById('corner')) mount('corner-slot', 'tpl-corner');
+
+    if (!animate) return;
+    if (isMobile()) fadeIn();
+    else if (old.length) boardTransition(old, name === 'menu');
   }
 
   /* Кнопка темы показывает, что она сделает: луна — включит тёмную, солнце — светлую. */
