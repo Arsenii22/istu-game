@@ -14,15 +14,15 @@
   cursor:pointer;
   font-weight:700;
   font-size:19px;
-  color:#fff;
+  color:var(--c-on-blue);
   background:var(--c-blue);
-  box-shadow:0 8px 20px rgba(10,102,255,.25);
+  box-shadow:0 8px 20px rgba(var(--c-blue-rgb),.25);
   transition:transform .16s ease, box-shadow .16s ease, background .16s ease;
 }
 .btn-write:hover{
   transform:translateY(-2px);
   background:var(--c-blue-deep);
-  box-shadow:0 0 0 5px var(--c-glow), 0 12px 26px rgba(10,102,255,.3);
+  box-shadow:0 0 0 5px var(--c-glow), 0 12px 26px rgba(var(--c-blue-rgb),.3);
 }
 .btn-write:active{transform:translateY(1px)}
 .btn-write__icon{
@@ -85,7 +85,7 @@
   transition:all .16s ease;
 }
 .pill:hover{border-color:var(--c-blue)}
-.pill.is-active{border-color:var(--c-blue);color:#fff;background:var(--c-blue)}
+.pill.is-active{border-color:var(--c-blue);color:var(--c-on-blue);background:var(--c-blue)}
 
 /* Лента: колонки газетного типа, карточки не разрываются между колонками. */
 .feed{
@@ -135,7 +135,7 @@
   border:1.5px solid var(--c-line);
   border-radius:16px;
   background:var(--c-surface);
-  box-shadow:0 2px 0 var(--c-line), 0 10px 24px rgba(14,26,43,.05);
+  box-shadow:0 2px 0 var(--c-line), 0 10px 24px rgba(var(--c-shadow-rgb),calc(.05*var(--shadow-k)));
   transition:border-color .18s ease, box-shadow .18s ease;
 }
 .review:hover{border-color:var(--c-blue);box-shadow:0 0 0 5px var(--c-glow)}
@@ -156,7 +156,7 @@
 }
 .review__photo[hidden]{display:none}
 .review__photo.is-stub{
-  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.22) 0 2px, transparent 2px 14px);
+  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,calc(.22*var(--light-k))) 0 2px, transparent 2px 14px);
 }
 .review__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 
@@ -214,7 +214,7 @@
   .feed__more-btn:hover{transform:none}
 
   .review{gap:14px;margin-bottom:14px;padding:20px 18px 18px}
-  .review:hover{box-shadow:0 2px 0 var(--c-line), 0 10px 24px rgba(14,26,43,.05);border-color:var(--c-line)}
+  .review:hover{box-shadow:0 2px 0 var(--c-line), 0 10px 24px rgba(var(--c-shadow-rgb),calc(.05*var(--shadow-k)));border-color:var(--c-line)}
   .review__photo{height:180px;font-size:15px}
   .review__text{font-size:16px}
   .review__avatar{width:44px;height:44px;font-size:15px}

@@ -33,6 +33,7 @@
   function show(name, mode) {
     S.show(name, mode);
     S.setSound(sound);
+    S.setTheme(window.Theme.current());
     markBranch();
   }
 
@@ -363,6 +364,14 @@
     blip(760, 0.08);
   }
 
+  function toggleTheme() {
+    blip(700, 0.06);
+    window.Theme.toggle();
+  }
+
+  /* Тему меняют и кнопкой, и система (если тема не выбрана явно). */
+  window.Theme.onChange(function (theme) { S.setTheme(theme); });
+
   function openAbout() {
     blip(700);
     after(function () {
@@ -393,6 +402,7 @@
     if (el.closest('[data-go="reviews"]')) { toReviews(); return; }
     if (el.closest('#btn-about')) { openAbout(); return; }
     if (el.closest('#btn-sound')) { toggleSound(); return; }
+    if (el.closest('#btn-theme')) { toggleTheme(); return; }
     if (el.closest('#btn-about-ok')) { closeAbout(); return; }
 
     if (el.closest('#about-overlay') && !el.closest('#about-dialog')) {
@@ -401,7 +411,7 @@
   });
 
   /* mouseover, в отличие от mouseenter, всплывает; отсеиваем перемещения внутри кнопки. */
-  var HOVER_SELECTOR = '.mode, #btn-back, #btn-about, #btn-about-ok, .chip, .round, .viewer__all, .pair__btn, .btn-write, .feed__more-btn, .rform__submit, .thanks__primary, .thanks__again, .tree-stage, .tree-label, .tree-card__row, .tree-focus__nav, .tree-detail__thumb, .tree-link, .tree-today__link, .tree-event.is-linked, .tree-menu__item';
+  var HOVER_SELECTOR = '.mode, #btn-back, #btn-about, #btn-theme, #btn-about-ok, .chip, .round, .viewer__all, .pair__btn, .btn-write, .feed__more-btn, .rform__submit, .thanks__primary, .thanks__again, .tree-stage, .tree-label, .tree-card__row, .tree-focus__nav, .tree-detail__thumb, .tree-link, .tree-today__link, .tree-event.is-linked, .tree-menu__item';
   document.addEventListener('mouseover', function (e) {
     /* На телефоне mouseover приходит вместе с касанием — второй писк был бы лишним. */
     if (S.isMobile()) return;

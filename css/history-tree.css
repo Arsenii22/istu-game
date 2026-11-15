@@ -178,7 +178,7 @@
   border:1.5px solid var(--c-blue);
   border-radius:16px;
   background:var(--c-surface);
-  box-shadow:0 0 0 6px var(--c-glow), 0 24px 50px rgba(14,26,43,.18);
+  box-shadow:0 0 0 6px var(--c-glow), 0 24px 50px rgba(var(--c-shadow-rgb),calc(.18*var(--shadow-k)));
   animation:tree-card .25s ease-out both;
   z-index:5;
 }
@@ -259,9 +259,9 @@
 .tree-focus__nav--next{
   padding:0 14px 0 18px;
   border-color:var(--c-blue);
-  color:var(--c-surface);
+  color:var(--c-on-blue);
   background:var(--c-blue);
-  box-shadow:0 8px 20px rgba(10,102,255,.25);
+  box-shadow:0 8px 20px rgba(var(--c-blue-rgb),.25);
 }
 .tree-focus__nav--next:hover{background:var(--c-blue-deep);box-shadow:0 0 0 5px var(--c-glow)}
 .tree-focus__nav-icon{flex:none;fill:none;stroke:var(--c-blue);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
@@ -285,7 +285,7 @@
   border:1.5px solid var(--c-line);
   border-radius:16px;
   background:var(--c-surface);
-  box-shadow:0 10px 24px rgba(14,26,43,.05);
+  box-shadow:0 10px 24px rgba(var(--c-shadow-rgb),calc(.05*var(--shadow-k)));
 }
 .tree-fcard__top{display:flex;align-items:center;gap:12px}
 .tree-fcard__icon{fill:none;stroke:var(--b);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
@@ -357,7 +357,7 @@
   border:1.5px solid var(--c-blue);
   border-radius:10px;
   background:var(--c-surface);
-  box-shadow:0 0 0 4px var(--c-glow), 0 14px 30px rgba(14,26,43,.16);
+  box-shadow:0 0 0 4px var(--c-glow), 0 14px 30px rgba(var(--c-shadow-rgb),calc(.16*var(--shadow-k)));
   animation:tree-card .16s ease-out both;
 }
 .tree-menu__item{
@@ -414,7 +414,7 @@
   padding:0 24px;
   border-radius:10px;
   background:var(--c-blue);
-  color:var(--c-surface);
+  color:var(--c-on-blue);
   font-size:16px;
   font-weight:700;
   text-decoration:none;
@@ -443,14 +443,14 @@
   justify-content:center;
   gap:18px;
   padding:40px 90px;
-  background:color-mix(in srgb, var(--c-ink) 85%, transparent);
+  background:var(--c-photo-scrim);
   animation:tree-fade .2s ease-out both;
 }
 .tree-photo__close{position:absolute;right:40px;top:30px;width:44px;height:44px}
 .tree-photo__img{min-height:0;max-width:100%;max-height:760px;display:block;border-radius:10px;background:var(--c-bg)}
 /* Размеры фото известны (js/data/photos.js): место занято сразу, при загрузке ничего не прыгает. */
 .tree-photo__img[width]{width:min(100%, calc(760px * var(--ar)));height:auto;aspect-ratio:var(--ar)}
-.tree-photo__caption{font-size:20px;font-weight:700;color:var(--c-surface);text-align:center}
+.tree-photo__caption{font-size:20px;font-weight:700;color:var(--c-on-scrim);text-align:center}
 
 .tree-pending{
   display:flex;
@@ -522,7 +522,7 @@
     display:flex;
     flex-direction:column;
     justify-content:flex-end;
-    background:rgba(14,26,43,.35);
+    background:var(--c-scrim);
     animation:tree-fade .2s ease-out both;
   }
   .tree-sheet > .tree-card,
@@ -536,7 +536,7 @@
     padding:10px 16px calc(20px + env(safe-area-inset-bottom));
     border:0;
     border-radius:18px 18px 0 0;
-    box-shadow:0 -12px 30px rgba(14,26,43,.18);
+    box-shadow:0 -12px 30px rgba(var(--c-shadow-rgb),calc(.18*var(--shadow-k)));
     animation:pp-sheet .25s ease-out both;
   }
   /* Полоска-ручка сверху панели. */

@@ -36,6 +36,8 @@
 <link rel="stylesheet" href="css/museum.css">
 <link rel="stylesheet" href="css/reviews.css">
 <link rel="stylesheet" href="css/review-form.css">
+<!-- Тема ставится до отрисовки страницы, чтобы тёмная не мигала светлой. -->
+<script src="js/theme.js"></script>
 </head>
 <body>
 
@@ -860,6 +862,16 @@
         <circle class="corner__icon-dot" cx="12" cy="7.5" r=".6"></circle>
       </svg>
       <span data-text="about"></span>
+    </button>
+
+    <button class="corner__btn corner__btn--icon" type="button" id="btn-theme" aria-pressed="false">
+      <svg class="corner__icon corner__icon--theme" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+        <path class="theme-moon" d="M20 14.5 A8.5 8.5 0 1 1 9.5 4 A6.8 6.8 0 0 0 20 14.5 Z"></path>
+        <g class="theme-sun">
+          <circle cx="12" cy="12" r="4.2"></circle>
+          <path d="M12 2.5 V4.6 M12 19.4 V21.5 M2.5 12 H4.6 M19.4 12 H21.5 M5.3 5.3 L6.8 6.8 M17.2 17.2 L18.7 18.7 M5.3 18.7 L6.8 17.2 M17.2 6.8 L18.7 5.3"></path>
+        </g>
+      </svg>
     </button>
 
     <button class="corner__btn" type="button" id="btn-sound" aria-pressed="false">

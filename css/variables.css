@@ -8,6 +8,7 @@
   --c-blue:#0A66FF;
   --c-blue-deep:#0B47A8;
   --c-teal:#14A3B8;
+  --c-on-blue:#FFFFFF;
   --c-glow:rgba(10,102,255,.16);
   --c-grid:rgba(11,71,168,.07);
   --c-circuit:rgba(11,71,168,.14);
@@ -15,6 +16,19 @@
   --c-photo:#D5DBE3;
   --c-photo-ink:#66748A;
   --g-title:linear-gradient(90deg, var(--c-teal), var(--c-blue-deep));
+
+  /* Тени, затемнения и блики. Тени пишутся как rgba(var(--c-shadow-rgb), calc(α * var(--shadow-k))):
+     в тёмной теме тень темнее фона и сильнее, иначе её не видно. --light-k так же
+     приглушает белые блики и штриховку заглушек. */
+  --c-shadow-rgb:14,26,43;
+  --shadow-k:1;
+  --c-blue-rgb:10,102,255;
+  --light-k:1;
+  --c-scrim:rgba(14,26,43,.35);         /* затемнение под окном «Об игре» и нижними панелями */
+  --c-photo-scrim:rgba(14,26,43,.85);   /* фон под фото события крупно */
+  --c-on-scrim:#FFFFFF;                 /* подпись на этом фоне */
+  --mark-filter:none;                   /* знак ipolytech: в тёмной теме светлый */
+  --logo-ring:none;                     /* логотип ИРНИТУ: в тёмной теме светлое кольцо-подложка */
 
   /* Цвета веток дерева: ключ — поле type направления в js/data/history.js. */
   --branch-mountain:#5F7C57;
@@ -46,4 +60,53 @@
   --menu-gap:60px;
   --foot-w:340px;
   --progress:0%;
+}
+
+/* Тёмная тема. Включает её js/theme.js: по умолчанию как в системе, переключатель —
+   кнопка рядом со звуком. Палитра от фирменного синего, не чёрная: глубокий тёмно-синий
+   фон, поверхности на тон светлее, текст не чисто белый, синий и бирюзовый осветлены.
+   Контраст текста и кнопок к фону — от 4.5:1, таблица — в README. */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --c-page:#081325;
+  --c-bg:#0C1B30;
+  --c-surface:#14263F;
+  --c-ink:#E3EAF4;
+  --c-ink-dim:#9EB1CA;
+  --c-line:#263C5C;
+  --c-blue:#5E9EFF;
+  --c-blue-deep:#8FBDFF;
+  --c-teal:#45CCDD;
+  --c-on-blue:#071630;
+  --c-glow:rgba(94,158,255,.22);
+  --c-grid:rgba(143,189,255,.045);
+  --c-circuit:rgba(143,189,255,.1);
+  --c-code:rgba(143,189,255,.07);
+  --c-photo:#1D3150;
+  --c-photo-ink:#9DB0C9;
+
+  --c-shadow-rgb:0,4,12;
+  --shadow-k:2.4;
+  --c-blue-rgb:94,158,255;
+  --light-k:.22;
+  --c-scrim:rgba(2,7,16,.62);
+  --c-photo-scrim:rgba(3,9,20,.9);
+  --c-on-scrim:#E3EAF4;
+  --mark-filter:invert(1) brightness(.92);
+  --logo-ring:0 0 0 3px #E3EAF4;
+
+  /* Ветки посветлее и насыщеннее, чтобы различались на тёмном фоне. */
+  --branch-mountain:#7DBE6F;
+  --branch-geology:#B9C760;
+  --branch-metallurgy:#E7965A;
+  --branch-construction:#56AEF5;
+  --branch-mechanical:#C083F0;
+  --branch-energy:#EFC14F;
+  --branch-it:#45C4D6;
+  --branch-chemistry:#5ACB9C;
+  --branch-economics:#D7A57C;
+  --branch-humanities:#EB86C4;
+  --branch-art:#F5837A;
+  --branch-design:#9298FA;
+  --branch-transport:#9DADC0;
 }

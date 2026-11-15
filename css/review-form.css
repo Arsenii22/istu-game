@@ -10,6 +10,13 @@
   --c-bad-soft:#FBEAE8;
   --c-hint:#9AA7B8;
 }
+:root[data-theme="dark"] .rform{
+  --c-ok:#3FCFB4;
+  --c-ok-soft:#123A3F;
+  --c-bad:#FF7A6E;
+  --c-bad-soft:#3A1F2A;
+  --c-hint:#7F93AE;
+}
 
 /* Приглашение */
 
@@ -68,7 +75,7 @@
   border:1.5px solid var(--c-line);
   border-radius:16px;
   background:var(--c-surface);
-  box-shadow:0 20px 50px rgba(14,26,43,.08);
+  box-shadow:0 20px 50px rgba(var(--c-shadow-rgb),calc(.08*var(--shadow-k)));
 }
 .rform__card{
   display:flex;
@@ -263,7 +270,7 @@
 .agree__btn.is-on .agree__box{border-color:var(--c-blue);background:var(--c-blue)}
 .agree__tick{
   fill:none;
-  stroke:#fff;
+  stroke:var(--c-on-blue);
   stroke-width:2.6;
   stroke-linecap:round;
   stroke-linejoin:round;
@@ -285,15 +292,15 @@
   cursor:pointer;
   font-weight:800;
   font-size:21px;
-  color:#fff;
+  color:var(--c-on-blue);
   background:var(--c-blue);
-  box-shadow:0 10px 24px rgba(10,102,255,.28);
+  box-shadow:0 10px 24px rgba(var(--c-blue-rgb),.28);
   transition:transform .16s ease, box-shadow .16s ease, background .16s ease;
 }
 .rform__submit:hover{
   transform:translateY(-2px);
   background:var(--c-blue-deep);
-  box-shadow:0 0 0 6px var(--c-glow), 0 14px 30px rgba(10,102,255,.3);
+  box-shadow:0 0 0 6px var(--c-glow), 0 14px 30px rgba(var(--c-blue-rgb),.3);
 }
 .rform__submit:active{transform:translateY(1px)}
 .rform__submit-icon{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
@@ -319,7 +326,7 @@
   border:2px solid var(--c-ok);
   border-radius:50%;
   background:var(--c-ok-soft);
-  box-shadow:0 0 0 10px rgba(14,143,126,.08);
+  box-shadow:0 0 0 10px color-mix(in srgb, var(--c-ok) 8%, transparent);
   fill:none;
   stroke:var(--c-ok);
   stroke-width:4;
@@ -353,9 +360,9 @@
 .thanks__primary{
   padding:0 32px;
   border:1.5px solid var(--c-blue);
-  color:#fff;
+  color:var(--c-on-blue);
   background:var(--c-blue);
-  box-shadow:0 8px 20px rgba(10,102,255,.25);
+  box-shadow:0 8px 20px rgba(var(--c-blue-rgb),.25);
 }
 .thanks__primary:hover{transform:translateY(-2px);background:var(--c-blue-deep);box-shadow:0 0 0 5px var(--c-glow)}
 .thanks__again{padding:0 28px;border:1.5px solid var(--c-line);background:var(--c-surface)}

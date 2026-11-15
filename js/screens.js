@@ -261,6 +261,16 @@ window.Screens = (function () {
     else if (!document.getElementById('corner')) mount('corner-slot', 'tpl-corner');
   }
 
+  /* Кнопка темы показывает, что она сделает: луна — включит тёмную, солнце — светлую. */
+  function setTheme(theme) {
+    var btn = document.getElementById('btn-theme');
+    if (!btn) return;   /* кнопка есть только в меню и на заглушке */
+    var label = theme === 'dark' ? window.CONFIG.texts.themeToLight : window.CONFIG.texts.themeToDark;
+    btn.setAttribute('aria-pressed', String(theme === 'dark'));
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+  }
+
   function setProgress(value) {
     var pct = Math.round(value * 100);
     document.documentElement.style.setProperty('--progress', pct + '%');
@@ -326,6 +336,7 @@ window.Screens = (function () {
     currentScreen: function () { return current; },
     setProgress: setProgress,
     setSound: setSound,
+    setTheme: setTheme,
     openAbout: openAbout,
     closeAbout: closeAbout,
     isAboutOpen: isAboutOpen,

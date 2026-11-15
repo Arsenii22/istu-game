@@ -20,7 +20,7 @@
   overflow:hidden;
   border-radius:14px;
   background:var(--c-bg);
-  box-shadow:0 24px 60px rgba(14,26,43,.14), 0 0 0 1px var(--c-line);
+  box-shadow:0 24px 60px rgba(var(--c-shadow-rgb),calc(.14*var(--shadow-k))), 0 0 0 1px var(--c-line);
 }
 
 .bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
@@ -96,6 +96,7 @@
   height:200px;
   display:block;
   border-radius:50%;
+  box-shadow:var(--logo-ring);
   animation:pp-pop .5s ease-out both;
 }
 .loading__bar{display:flex;flex-direction:column;gap:16px;width:520px;max-width:80%}
@@ -139,6 +140,8 @@
   width:620px;
 }
 .menu__mark{height:var(--mark-h);width:auto;display:block}
+/* Знак чёрный; в тёмной теме фильтр делает его светлым (--mark-filter в css/variables.css). */
+[data-img="mark"]{filter:var(--mark-filter)}
 .menu__title{
   margin:0;
   padding-bottom:6px;
@@ -168,18 +171,18 @@
   cursor:pointer;
   text-align:left;
   background:var(--c-surface);
-  box-shadow:0 2px 0 var(--c-line), 0 10px 24px rgba(14,26,43,.06);
+  box-shadow:0 2px 0 var(--c-line), 0 10px 24px rgba(var(--c-shadow-rgb),calc(.06*var(--shadow-k)));
   transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 .mode:hover{
   transform:translateX(6px);
   border-color:var(--c-blue);
-  box-shadow:0 0 0 5px var(--c-glow), 0 18px 36px rgba(10,102,255,.18);
+  box-shadow:0 0 0 5px var(--c-glow), 0 18px 36px rgba(var(--c-blue-rgb),.18);
 }
 .mode:active{
   transform:translateX(2px) translateY(1px);
   border-color:var(--c-blue);
-  box-shadow:0 0 0 3px var(--c-glow), 0 4px 10px rgba(10,102,255,.14);
+  box-shadow:0 0 0 3px var(--c-glow), 0 4px 10px rgba(var(--c-blue-rgb),.14);
 }
 .mode__num{
   flex:none;
@@ -218,7 +221,7 @@
   gap:16px;
   animation:pp-in .45s ease-out both;
 }
-.footer__logo{width:58px;height:58px;border-radius:50%;display:block}
+.footer__logo{width:58px;height:58px;border-radius:50%;display:block;box-shadow:var(--logo-ring)}
 .footer__text{
   font-size:15px;
   font-weight:600;
@@ -248,7 +251,7 @@
   border-radius:18px;
   background:var(--c-surface);
   border:1.5px solid var(--c-line);
-  box-shadow:0 20px 50px rgba(14,26,43,.08);
+  box-shadow:0 20px 50px rgba(var(--c-shadow-rgb),calc(.08*var(--shadow-k)));
 }
 .stub__badge{
   padding:9px 18px;
@@ -258,7 +261,7 @@
   font-size:18px;
   letter-spacing:.1em;
   text-transform:uppercase;
-  color:#fff;
+  color:var(--c-on-blue);
 }
 .stub__title{
   margin:0;
@@ -294,15 +297,15 @@
   gap:16px;
   font-weight:700;
   font-size:26px;
-  color:#fff;
+  color:var(--c-on-blue);
   background:var(--c-blue);
-  box-shadow:0 8px 20px rgba(10,102,255,.25);
+  box-shadow:0 8px 20px rgba(var(--c-blue-rgb),.25);
   transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .btn-back:hover{
   transform:translateY(-3px);
   background:var(--c-blue-deep);
-  box-shadow:0 0 0 5px var(--c-glow), 0 14px 30px rgba(10,102,255,.3);
+  box-shadow:0 0 0 5px var(--c-glow), 0 14px 30px rgba(var(--c-blue-rgb),.3);
 }
 .btn-back:active{transform:translateY(1px);box-shadow:0 0 0 3px var(--c-glow)}
 .btn-back__icon{
@@ -341,6 +344,13 @@
 /* Отдельный класс, а не атрибут fill: CSS-правило родителя перебило бы презентационный атрибут. */
 .corner__icon-dot{fill:var(--c-blue)}
 
+.corner__btn--icon{width:56px;padding:0;justify-content:center}
+.corner__icon--theme{stroke-linejoin:round}
+/* Луна — включить тёмную тему, солнце — вернуть светлую. */
+.theme-sun{display:none}
+:root[data-theme="dark"] .theme-sun{display:inline}
+:root[data-theme="dark"] .theme-moon{display:none}
+
 .snd-on,.snd-off{display:none}
 .corner[data-sound="on"] .snd-on{display:inline}
 .corner[data-sound="off"] .snd-off{display:inline}
@@ -353,7 +363,7 @@
   align-items:center;
   justify-content:center;
   padding:60px;
-  background:rgba(14,26,43,.35);
+  background:var(--c-scrim);
   backdrop-filter:blur(3px);
   animation:pp-in .2s ease-out both;
 }
@@ -367,7 +377,7 @@
   border-radius:18px;
   background:var(--c-surface);
   border:1.5px solid var(--c-line);
-  box-shadow:0 30px 70px rgba(14,26,43,.25);
+  box-shadow:0 30px 70px rgba(var(--c-shadow-rgb),calc(.25*var(--shadow-k)));
   animation:pp-pop .25s ease-out both;
 }
 .about__title{margin:0;font-weight:800;font-size:42px;color:var(--c-blue-deep)}
@@ -390,7 +400,7 @@
   cursor:pointer;
   font-weight:700;
   font-size:22px;
-  color:#fff;
+  color:var(--c-on-blue);
   background:var(--c-blue);
   transition:transform .16s ease, box-shadow .16s ease, background .16s ease;
 }
@@ -489,12 +499,12 @@
 .round--primary{
   border-color:var(--c-blue);
   background:var(--c-blue);
-  box-shadow:0 8px 20px rgba(10,102,255,.25);
+  box-shadow:0 8px 20px rgba(var(--c-blue-rgb),.25);
 }
-.round--primary .round__icon{stroke:#fff}
+.round--primary .round__icon{stroke:var(--c-on-blue)}
 .round--primary:hover{
   background:var(--c-blue-deep);
-  box-shadow:0 0 0 5px var(--c-glow), 0 12px 26px rgba(10,102,255,.3);
+  box-shadow:0 0 0 5px var(--c-glow), 0 12px 26px rgba(var(--c-blue-rgb),.3);
 }
 .round--primary:disabled{border-color:var(--c-blue);background:var(--c-blue)}
 
@@ -572,6 +582,7 @@
   /* «Об игре» и «Звук» — в правом верхнем углу страницы, над брендом. */
   .corner{top:16px;right:16px;gap:8px}
   .corner__btn{height:44px;padding:0 14px 0 10px;gap:8px;font-size:15px;border-radius:10px}
+  .corner__btn--icon{width:44px;padding:0}
   .corner__btn:hover{transform:none}
   .corner__icon{width:22px;height:22px}
 

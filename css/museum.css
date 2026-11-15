@@ -111,7 +111,7 @@
   box-shadow:0 0 0 4px var(--c-glow);
 }
 .pair__btn:active{transform:translateY(1px)}
-.pair__btn--primary{border-color:var(--c-blue);color:#fff;background:var(--c-blue)}
+.pair__btn--primary{border-color:var(--c-blue);color:var(--c-on-blue);background:var(--c-blue)}
 .pair__btn--primary:hover{background:var(--c-blue-deep);box-shadow:0 0 0 5px var(--c-glow)}
 .pair__btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
 .pair__icon{
@@ -155,7 +155,7 @@
 .case:hover{
   transform:translateY(-4px);
   border-color:var(--c-blue);
-  box-shadow:0 0 0 5px var(--c-glow), 0 18px 36px rgba(10,102,255,.18);
+  box-shadow:0 0 0 5px var(--c-glow), 0 18px 36px rgba(var(--c-blue-rgb),.18);
 }
 
 /* Стекло витрины: подложка, фото и блик. */
@@ -189,7 +189,7 @@
   position:absolute;
   inset:0;
   border-radius:8px;
-  background:linear-gradient(115deg, rgba(255,255,255,.38) 0%, rgba(255,255,255,.14) 28%, rgba(255,255,255,0) 46%);
+  background:linear-gradient(115deg, rgba(255,255,255,calc(.38*var(--light-k))) 0%, rgba(255,255,255,calc(.14*var(--light-k))) 28%, rgba(255,255,255,0) 46%);
   pointer-events:none;
 }
 
@@ -220,7 +220,7 @@
 .glass--big{margin:0;padding:24px}
 .glass--big .glass__photo{font-size:24px}
 .glass--big .glass__photo.is-stub{
-  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.22) 0 2px, transparent 2px 16px);
+  background-image:repeating-linear-gradient(135deg, rgba(255,255,255,calc(.22*var(--light-k))) 0 2px, transparent 2px 16px);
 }
 /* Крупно экспонат показывается целиком, без обрезки. */
 .glass--big .glass__img{object-fit:contain}
