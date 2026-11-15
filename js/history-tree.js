@@ -18,6 +18,23 @@ window.HistoryTree = (function () {
   var PAD_B = 90;
   var PAD_T = 70;
 
+  /* Мобильное дерево (окно уже 760 px): ствол у левого края, все ветки вправо,
+     подпись — над своей веткой во всю ширину. Высоты подписей измеряются, поэтому
+     длинные названия переносятся и ни на что не наезжают. */
+  var M = {
+    TX: 30,           /* ось ствола */
+    EDGE: 14,         /* от кончика ветки до края экрана */
+    RISE: 12,         /* подъём кончика ветки */
+    LABEL_IN: 48,     /* от ствола до начала подписи: здесь поднимаются подветки */
+    LABEL_GAP: 10,    /* от ветки до низа её подписи */
+    SUB_GAP: 16,      /* от подписи до следующей подветки */
+    STEP: 18,         /* от подписи до следующей ветки или плашки */
+    ELBOW: 14,        /* радиус изгиба подветки */
+    STAGE_IN: 28,     /* от ствола до плашки этапа */
+    PAD_T: 40,
+    PAD_B: 70,
+  };
+
   /* Рост и камера, секунды. */
   var START = 0.4;      /* пауза перед ростом */
   var GROW = 7;         /* за сколько фронт роста проходит ствол снизу доверху */
@@ -44,6 +61,9 @@ window.HistoryTree = (function () {
   var photoEl = null;   /* открытое крупно фото события или null */
   var menuEl = null;    /* открытое меню переходов или null */
   var menuRow = null;   /* строка события, к которой оно открыто */
+  var mobile = false;
+  var menuSheet = null; /* мобильный режим: нижняя панель с меню переходов */
+  var cardSheet = null; /* мобильный режим: нижняя панель с карточкой этапа */
 
   /* Данные */
 
@@ -97,7 +117,8 @@ window.HistoryTree = (function () {
     return { L: sides.L.sort(byFirstYear), R: sides.R.sort(byFirstYear), h: Math.max(ls, rs) };
   }
 
-  function layout() {
+  /* Этапы и ветки по участкам ствола: ветка растёт от этапа своего самого раннего года. */
+  function segments() {
     var data = window.HISTORY_DATA;
     var stages = data.stages.map(function (s, i) {
       var n = data.stages[i + 1];
@@ -115,6 +136,14 @@ window.HistoryTree = (function () {
       if (fy === null) crown.push(b);
       else segs[stageIndex(fy)].push(b);
     });
+    return { stages: stages, segs: segs, crown: crown };
+  }
+
+  function layout() {
+    var sg = segments();
+    var stages = sg.stages;
+    var segs = sg.segs;
+    var crown = sg.crown;
 
     var placed = segs.map(place);
     var crownPlaced = place(crown);
@@ -130,7 +159,7 @@ window.HistoryTree = (function () {
     var crownY = nodeY[last] - segH[last];
     var result = {
       stages: stages, segs: segs, crown: crown, height: height, nodeY: nodeY, last: last, crownY: crownY,
-      top: crownY - crownH + 20, bottom: nodeY[0] + 50, rows: [],
+      top: crownY - crownH + 20, bottom: nodeY[0] + 50, rows: [], cx: CX, width: 1600,
     };
 
     function build(pl, baseY, dashed) {
@@ -155,6 +184,107 @@ window.HistoryTree = (function () {
     return result;
   }
 
+  /* Высота элемента из шаблона при заданной ширине: клон кладётся в дерево невидимым и сразу убирается. */
+  function measure(tplId, fill, width) {
+    var frag = Screens.clone(tplId);
+    var el = frag.firstElementChild;
+    fill(el);
+    el.style.cssText = 'left:0;top:0;visibility:hidden;animation:none;width:' + width + 'px';
+    canvas.appendChild(el);
+    var h = el.offsetHeight;
+    el.remove();
+    return h;
+  }
+
+  function labelHeight(title, meta, main, width) {
+    return measure('tpl-tree-label', function (el) {
+      el.classList.add(main ? 'tree-label--main' : 'tree-label--sub');
+      el.querySelector('[data-slot="title"]').textContent = title;
+      el.querySelector('[data-slot="meta"]').textContent = meta;
+    }, width);
+  }
+
+  function mainMeta(b) {
+    var n = allItems(b).length;
+    return n + ' ' + Screens.plural(n, T.eventForms);
+  }
+
+  /* Мобильная раскладка: снизу вверх — плашка этапа, над ней ветки этого этапа по году,
+     у каждой ветки сверху подпись, над подписью — подветки со своими подписями. */
+  function layoutMobile(W) {
+    var sg = segments();
+    var cx = M.TX;
+    var tipX = W - M.EDGE;
+    var len = tipX - cx;
+    var labelX = cx + M.LABEL_IN;
+    var labelW = W - M.EDGE + 4 - labelX;
+    var stageX = cx + M.STAGE_IN;
+    var stageW = W - 16 - stageX;
+    var crownH = canvas.querySelector('#tree-crown').offsetHeight || 32;
+
+    var stageH = sg.stages.map(function (s) {
+      return measure('tpl-tree-stage', function (el) {
+        el.querySelector('[data-slot="year"]').textContent = s.year;
+        el.querySelector('[data-slot="name"]').textContent = s.name;
+      }, stageW);
+    });
+
+    /* Ветки участка снизу вверх; top — верхняя занятая точка, возвращается новая. */
+    function stack(list, top, dashed, rows) {
+      list.slice().sort(byFirstYear).forEach(function (b) {
+        var by = top - M.STEP;
+        var tipY = by - M.RISE;
+        var pts = [[cx + 5, by], [cx + len * 0.3, by + 2], [cx + len * 0.7, tipY], [tipX, tipY]];
+        var h = labelHeight(b.title, mainMeta(b), true, labelW);
+        var lab = { x: labelX, y: tipY - M.LABEL_GAP - h, w: labelW };
+        top = lab.y;
+
+        var s = bz(pts, 0.04);
+        var subs = (b.subbranches || []).map(function (sb) {
+          var e = top - M.SUB_GAP;
+          var x0 = s[0] + M.ELBOW;
+          var x1 = tipX - 6;
+          var sh = labelHeight(sb.title, String(sb.items.length), false, labelW);
+          var sub = {
+            title: sb.title,
+            items: sb.items,
+            /* Вверх вдоль ствола, плавный изгиб, дальше горизонтально — подписи не пересекает. */
+            d: 'M' + s[0] + ' ' + s[1] + ' V' + (e + M.ELBOW) + ' Q' + s[0] + ' ' + e + ' ' + x0 + ' ' + e + ' H' + x1,
+            at: function (t) { return [x0 + (x1 - x0) * t, e]; },
+            end: [x1, e],
+            lab: { x: labelX, y: e - M.LABEL_GAP - sh, w: labelW },
+          };
+          top = sub.lab.y;
+          return sub;
+        });
+        rows.push({ b: b, dir: 1, y: by, pts: pts, subs: subs, dashed: dashed, lab: lab });
+      });
+      return top;
+    }
+
+    function build(y0) {
+      var r = { stages: sg.stages, segs: sg.segs, crown: sg.crown, nodeY: [], chipY: [], rows: [], last: sg.stages.length - 1,
+        cx: cx, width: W, stageX: stageX, stageW: stageW, mobile: true };
+      var top = y0;
+      sg.stages.forEach(function (s, i) {
+        var y = i === 0 ? y0 : top - M.STEP - stageH[i] / 2;
+        r.nodeY.push(y);
+        r.chipY.push(y - stageH[i] / 2);
+        top = stack(sg.segs[i], y - stageH[i] / 2, false, r.rows);
+      });
+      r.crownY = top - M.STEP - crownH / 2;
+      top = sg.crown.length ? stack(sg.crown, r.crownY - crownH / 2, true, r.rows) : r.crownY - crownH / 2;
+      r.top = top - 20;
+      r.bottom = y0 + 50;
+      r.height = y0 + M.PAD_B;
+      return r;
+    }
+
+    /* Первый проход узнаёт высоту, второй строит с нужным отступом сверху. */
+    var probe = build(0);
+    return build(-probe.top + M.PAD_T);
+  }
+
   /* Через сколько секунд фронт роста доходит до высоты y. */
   function growDelay(y) {
     return START + (L.bottom - y) / (L.bottom - L.top) * GROW;
@@ -170,9 +300,10 @@ window.HistoryTree = (function () {
     return n;
   }
 
-  function addLeaves(g, pts, list, t0, t1, delay) {
+  /* at(t) — точка ветки при t от 0 до 1. */
+  function addLeaves(g, at, list, t0, t1, delay) {
     list.forEach(function (it, j) {
-      var p = bz(pts, list.length === 1 ? (t0 + t1) / 2 : t0 + (t1 - t0) * j / (list.length - 1));
+      var p = at(list.length === 1 ? (t0 + t1) / 2 : t0 + (t1 - t0) * j / (list.length - 1));
       var year = yearOf(it[0]);
       var leaf = svgEl('circle', { cx: p[0], cy: p[1], r: 5.5 },
         'tree-leaf' + (year === null ? ' tree-leaf--open' : ''), delay + 0.05 * j);
@@ -192,58 +323,67 @@ window.HistoryTree = (function () {
       ? svgEl('path', { d: pathD(r.pts) }, 'tree-line tree-line--main tree-line--dashed', d0)
       : svgEl('path', { d: pathD(r.pts), pathLength: 1 }, 'tree-line tree-line--main tree-draw', d0));
 
+    /* У мобильной подветки путь и точки листьев готовые (sb.d, sb.at), у обычной — кривая sb.pts. */
+    var subD = function (sb) { return sb.d || pathD(sb.pts); };
+
     r.subs.forEach(function (sb) {
-      g.appendChild(svgEl('path', { d: pathD(sb.pts), pathLength: 1 }, 'tree-line tree-line--sub tree-draw tree-draw--sub', d0 + 0.45));
+      g.appendChild(svgEl('path', { d: subD(sb), pathLength: 1 }, 'tree-line tree-line--sub tree-draw tree-draw--sub', d0 + 0.45));
     });
 
-    addLeaves(g, r.pts, r.b.items, 0.3, 0.93, d0 + 0.75);
-    r.subs.forEach(function (sb) { addLeaves(g, sb.pts, sb.items, 0.4, 0.94, d0 + 1.1); });
+    addLeaves(g, function (t) { return bz(r.pts, t); }, r.b.items, 0.3, 0.93, d0 + 0.75);
+    r.subs.forEach(function (sb) {
+      if (sb.at) addLeaves(g, sb.at, sb.items, 0.12, 0.96, d0 + 1.1);
+      else addLeaves(g, function (t) { return bz(sb.pts, t); }, sb.items, 0.4, 0.94, d0 + 1.1);
+    });
 
-    g.appendChild(svgEl('circle', { cx: CX + r.dir * 7, cy: r.y, r: 5 }, 'tree-joint', d0));
+    g.appendChild(svgEl('circle', { cx: L.cx + r.dir * 7, cy: r.y, r: 5 }, 'tree-joint', d0));
     g.appendChild(svgEl('path', { d: pathD(r.pts) }, 'tree-hit'));
-    r.subs.forEach(function (sb) { g.appendChild(svgEl('path', { d: pathD(sb.pts) }, 'tree-hit')); });
+    r.subs.forEach(function (sb) { g.appendChild(svgEl('path', { d: subD(sb) }, 'tree-hit')); });
     svg.appendChild(g);
   }
 
   function drawStageNode(trunk, s) {
     var y = L.nodeY[s.i];
     var g = svgEl('g', {}, 'tree-node', growDelay(y));
-    var ring = svgEl('circle', { cx: CX, cy: y, r: 15 }, 'tree-node__ring');
+    var ring = svgEl('circle', { cx: L.cx, cy: y, r: 15 }, 'tree-node__ring');
     g.appendChild(ring);
-    g.appendChild(svgEl('circle', { cx: CX, cy: y, r: 5 }, 'tree-node__core'));
-    g.appendChild(svgEl('circle', { cx: CX, cy: y, r: 25 }, 'tree-node__halo'));
+    g.appendChild(svgEl('circle', { cx: L.cx, cy: y, r: 5 }, 'tree-node__core'));
+    g.appendChild(svgEl('circle', { cx: L.cx, cy: y, r: 25 }, 'tree-node__halo'));
     trunk.appendChild(g);
     stageNodes.push({ group: g, ring: ring });
   }
 
   function drawSvg() {
     var svg = canvas.querySelector('#tree-svg');
-    svg.setAttribute('width', 1600);
+    svg.setAttribute('width', L.width);
     svg.setAttribute('height', L.height);
 
     var b = L.bottom;
+    var cx = L.cx;
     var lastY = L.nodeY[L.last];
+    var root = L.mobile ? 22 : 60;     /* у ствола у края корни уже, чтобы не уходили за экран */
+    var ground = L.mobile ? 24 : 140;
     var trunk = svgEl('g', {}, 'tree-trunk');
     trunk.appendChild(svgEl('path', {
-      d: 'M' + (CX - 60) + ' ' + (b + 6) + ' Q' + (CX - 14) + ' ' + (b - 4) + ' ' + CX + ' ' + (b - 40) +
-         ' Q' + (CX + 14) + ' ' + (b - 4) + ' ' + (CX + 60) + ' ' + (b + 6),
+      d: 'M' + (cx - root) + ' ' + (b + 6) + ' Q' + (cx - 14) + ' ' + (b - 4) + ' ' + cx + ' ' + (b - 40) +
+         ' Q' + (cx + 14) + ' ' + (b - 4) + ' ' + (cx + root) + ' ' + (b + 6),
     }, 'tree-root', 0));
-    trunk.appendChild(svgEl('line', { x1: CX - 140, x2: CX + 140, y1: b + 8, y2: b + 8 }, 'tree-ground'));
+    trunk.appendChild(svgEl('line', { x1: cx - ground, x2: cx + (L.mobile ? 120 : ground), y1: b + 8, y2: b + 8 }, 'tree-ground'));
 
     /* Ствол растёт равномерно, чтобы фронт совпадал с задержками веток и камерой. */
-    var bar = svgEl('path', { d: 'M' + CX + ' ' + b + ' V' + lastY, pathLength: 1 }, 'tree-bar tree-draw', START);
+    var bar = svgEl('path', { d: 'M' + cx + ' ' + b + ' V' + lastY, pathLength: 1 }, 'tree-bar tree-draw', START);
     bar.style.animationDuration = (b - lastY) / (b - L.top) * GROW + 's';
     bar.style.animationTimingFunction = 'linear';
     trunk.appendChild(bar);
 
-    trunk.appendChild(svgEl('path', { d: 'M' + CX + ' ' + (lastY - 14) + ' V' + L.top }, 'tree-bar tree-bar--open', growDelay(lastY)));
+    trunk.appendChild(svgEl('path', { d: 'M' + cx + ' ' + (lastY - 14) + ' V' + L.top }, 'tree-bar tree-bar--open', growDelay(lastY)));
     svg.appendChild(trunk);
 
     L.rows.forEach(function (r) { drawBranch(svg, r); });
 
     var nodes = svgEl('g', {}, 'tree-trunk');
     L.stages.forEach(function (s) { drawStageNode(nodes, s); });
-    if (L.crown.length) nodes.appendChild(svgEl('circle', { cx: CX, cy: L.crownY, r: 9 }, 'tree-crown', growDelay(L.crownY)));
+    if (L.crown.length) nodes.appendChild(svgEl('circle', { cx: cx, cy: L.crownY, r: 9 }, 'tree-crown', growDelay(L.crownY)));
     svg.appendChild(nodes);
   }
 
@@ -258,8 +398,14 @@ window.HistoryTree = (function () {
     L.stages.forEach(function (s) {
       var frag = Screens.clone('tpl-tree-stage');
       var btn = frag.querySelector('.tree-stage');
-      btn.style.left = CX - 300 + 'px';
-      btn.style.top = L.nodeY[s.i] - 26 + 'px';
+      if (L.mobile) {
+        btn.style.left = L.stageX + 'px';
+        btn.style.top = L.chipY[s.i] + 'px';
+        btn.style.width = L.stageW + 'px';
+      } else {
+        btn.style.left = CX - 300 + 'px';
+        btn.style.top = L.nodeY[s.i] - 26 + 'px';
+      }
       btn.style.animationDelay = growDelay(L.nodeY[s.i]) + 's';
       btn.dataset.stage = s.i;
       frag.querySelector('[data-slot="year"]').textContent = s.year;
@@ -270,20 +416,27 @@ window.HistoryTree = (function () {
 
     var crown = canvas.querySelector('#tree-crown');
     crown.hidden = !L.crown.length;
-    crown.style.left = CX + 24 + 'px';
-    crown.style.top = L.crownY - 17 + 'px';
+    crown.style.left = L.cx + 24 + 'px';
+    crown.style.top = L.crownY - (L.mobile ? crown.offsetHeight / 2 : 17) + 'px';
     crown.style.animationDelay = growDelay(L.crownY) + 's';
   }
 
-  function addLabel(box, r, end, title, meta, main, delay) {
+  /* lab — место подписи из мобильной раскладки; без него подпись стоит у кончика ветки. */
+  function addLabel(box, r, end, title, meta, main, delay, lab) {
     var frag = Screens.clone('tpl-tree-label');
     var btn = frag.querySelector('.tree-label');
     btn.dataset.branch = r.b.type;
     setColor(btn, r.b.type);
     btn.classList.add(main ? 'tree-label--main' : 'tree-label--sub');
     if (r.dir < 0) btn.classList.add('tree-label--left');
-    btn.style.left = (r.dir < 0 ? end[0] - 18 - 300 : end[0] + 18) + 'px';
-    btn.style.top = end[1] - 14 + 'px';
+    if (lab) {
+      btn.style.left = lab.x + 'px';
+      btn.style.top = lab.y + 'px';
+      btn.style.width = lab.w + 'px';
+    } else {
+      btn.style.left = (r.dir < 0 ? end[0] - 18 - 300 : end[0] + 18) + 'px';
+      btn.style.top = end[1] - 14 + 'px';
+    }
     btn.style.animationDelay = delay + 's';
     frag.querySelector('[data-slot="title"]').textContent = title;
     frag.querySelector('[data-slot="meta"]').textContent = meta;
@@ -295,10 +448,9 @@ window.HistoryTree = (function () {
     var box = canvas.querySelector('#tree-labels');
     L.rows.forEach(function (r) {
       var d0 = growDelay(r.y);
-      var n = allItems(r.b).length;
-      addLabel(box, r, r.pts[3], r.b.title, n + ' ' + Screens.plural(n, T.eventForms), true, d0 + 0.7);
+      addLabel(box, r, r.pts[3], r.b.title, mainMeta(r.b), true, d0 + 0.7, r.lab);
       r.subs.forEach(function (sb) {
-        addLabel(box, r, sb.pts[3], sb.title, String(sb.items.length), false, d0 + 1.05);
+        addLabel(box, r, sb.end || sb.pts[3], sb.title, String(sb.items.length), false, d0 + 1.05, sb.lab);
       });
     });
   }
@@ -319,9 +471,19 @@ window.HistoryTree = (function () {
 
   /* Карточка этапа */
 
+  /* Нижняя панель (мобильный режим): затемнение на весь экран и панель снизу. */
+  function sheet(panel) {
+    var el = document.createElement('div');
+    el.className = 'tree-sheet';
+    el.appendChild(panel);
+    root.querySelector('.tree-screen').appendChild(el);
+    return el;
+  }
+
   function renderCard() {
     var box = canvas.querySelector('#tree-card');
     box.replaceChildren();
+    if (cardSheet) { cardSheet.remove(); cardSheet = null; }
 
     stageNodes.forEach(function (n, i) {
       n.group.classList.toggle('is-on', i === stage);
@@ -338,8 +500,10 @@ window.HistoryTree = (function () {
 
     var frag = Screens.clone('tpl-tree-card');
     var card = frag.querySelector('.tree-card');
-    card.style.left = CX - 44 - 390 + 'px';
-    card.style.bottom = L.height - L.nodeY[stage] - 40 + 'px';
+    if (!mobile) {
+      card.style.left = CX - 44 - 390 + 'px';
+      card.style.bottom = L.height - L.nodeY[stage] - 40 + 'px';
+    }
     frag.querySelector('[data-slot="period"]').textContent =
       cur.next ? cur.year + ' — ' + cur.next : T.treeSince + ' ' + cur.year;
     frag.querySelector('[data-slot="name"]').textContent = cur.name;
@@ -357,7 +521,8 @@ window.HistoryTree = (function () {
       row.querySelector('[data-slot="year"]').textContent = String(firstYear(b));
       rows.appendChild(row);
     });
-    box.appendChild(frag);
+    if (mobile) cardSheet = sheet(card);
+    else box.appendChild(frag);
   }
 
   function pickStage(i) {
@@ -365,8 +530,9 @@ window.HistoryTree = (function () {
     stage = opening ? i : null;
     renderCard();
     if (opening) {
-      var top = L.nodeY[i] - 520;
-      if (top < scroller.scrollTop) scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      /* Мобильный режим: карточка в панели снизу, этап поднимаем в верхнюю часть экрана. */
+      var top = mobile ? L.nodeY[i] - scroller.clientHeight * 0.25 : L.nodeY[i] - 520;
+      if (mobile || top < scroller.scrollTop) scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
       if (hooks.pick) hooks.pick();
     } else if (hooks.close) hooks.close();
   }
@@ -390,7 +556,7 @@ window.HistoryTree = (function () {
   function originOf(e) {
     if (!e || !e.detail) return [800, 450];
     var r = root.getBoundingClientRect();
-    var k = r.width / 1600;
+    var k = mobile ? 1 : r.width / 1600;
     return [(e.clientX - r.left) / k, (e.clientY - r.top) / k];
   }
 
@@ -455,6 +621,20 @@ window.HistoryTree = (function () {
       item.textContent = l.label;
       menuEl.appendChild(item);
     });
+
+    /* Мобильный режим: меню — нижней панелью, сверху год и название события. */
+    if (mobile) {
+      var head = document.createElement('span');
+      head.className = 'tree-menu__head';
+      head.textContent = row.querySelector('[data-slot="year"]').textContent + ' · ' +
+        row.querySelector('[data-slot="name"]').textContent;
+      menuEl.prepend(head);
+      menuSheet = sheet(menuEl);
+      document.addEventListener('click', onOutsideClick);
+      if (byKeyboard) menuEl.querySelector('.tree-menu__item').focus();
+      if (hooks.pick) hooks.pick();
+      return;
+    }
     body.appendChild(frag);
 
     /* Сцена масштабирована: экранные координаты переводим в координаты сцены. */
@@ -476,7 +656,8 @@ window.HistoryTree = (function () {
 
   function closeMenu() {
     if (!menuEl) return;
-    menuEl.remove();
+    (menuSheet || menuEl).remove();
+    menuSheet = null;
     menuRow.classList.remove('is-open');
     menuEl = null;
     menuRow = null;
@@ -735,6 +916,12 @@ window.HistoryTree = (function () {
       if (!el.closest('.tree-photo__img')) closePhoto();
       return;
     }
+    /* Касание затемнения вокруг нижней панели закрывает её. */
+    if (el.classList.contains('tree-sheet')) {
+      if (menuEl) closeMenu();
+      else closeCard();
+      return;
+    }
     var link = el.closest('[data-link]');
     if (link) { followLink(link); return; }
     if (el.closest('#tree-menu')) return;
@@ -775,12 +962,15 @@ window.HistoryTree = (function () {
     clearTimeout(closeTimer);
     root = el;
     hooks = h || {};
-    L = layout();
+    mobile = Screens.isMobile();
     stage = null;
     hover = null;
     focus = null;
     focusEl = null;
     photoEl = null;
+    menuEl = null;
+    menuSheet = null;
+    cardSheet = null;
     hotItems = [];
     leaves = [];
     stageNodes = [];
@@ -789,6 +979,8 @@ window.HistoryTree = (function () {
     root.replaceChildren(Screens.clone('tpl-history-tree'));
     scroller = root.querySelector('#tree-scroll');
     canvas = root.querySelector('#tree-canvas');
+    /* Мобильной раскладке нужна ширина экрана и уже отрисованные подписи для замера. */
+    L = mobile ? layoutMobile(scroller.clientWidth) : layout();
     canvas.style.height = L.height + 'px';
 
     drawSvg();
@@ -796,8 +988,11 @@ window.HistoryTree = (function () {
     renderLabels();
 
     root.addEventListener('click', onClick);
-    canvas.addEventListener('mouseover', onOver);
-    canvas.addEventListener('mouseleave', function () { setHover(null); });
+    /* Подсветка ветки — только под мышью: на телефоне касание оставило бы её включённой. */
+    if (!mobile) {
+      canvas.addEventListener('mouseover', onOver);
+      canvas.addEventListener('mouseleave', function () { setHover(null); });
+    }
 
     /* Любое действие пользователя сразу отдаёт ему камеру; рост дерева при этом продолжается. */
     ['wheel', 'pointerdown', 'touchstart'].forEach(function (name) {
