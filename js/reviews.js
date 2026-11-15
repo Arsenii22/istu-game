@@ -44,7 +44,9 @@ window.Reviews = (function () {
     });
 
     var active = row.querySelector('.is-active');
-    if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    /* В мобильном режиме scrollIntoView сдвинул бы и страницу; ряд прокручиваем сами. */
+    if (active && Screens.isMobile()) Screens.centerIn(row, active);
+    else if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
   function makeCard(r) {

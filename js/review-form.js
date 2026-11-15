@@ -157,6 +157,8 @@ window.ReviewForm = (function () {
     if (bad) {
       shown = true;
       renderErrors();
+      /* На телефоне кнопка отправки внизу длинной формы — показываем сводку ошибок. */
+      if (Screens.isMobile()) root.querySelector('#rform-summary').scrollIntoView({ block: 'center', behavior: 'smooth' });
       if (hooks.invalid) hooks.invalid();
       return;
     }
@@ -167,6 +169,7 @@ window.ReviewForm = (function () {
       clearPhoto();
       form.hidden = true;
       root.querySelector('#rform-thanks').hidden = false;
+      if (Screens.isMobile()) window.scrollTo(0, 0);
       if (hooks.sent) hooks.sent();
     });
   }

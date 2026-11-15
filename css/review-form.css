@@ -362,3 +362,50 @@
 .thanks__again:hover{transform:translateY(-2px);border-color:var(--c-blue);box-shadow:0 0 0 4px var(--c-glow)}
 .thanks__primary:active,
 .thanks__again:active{transform:translateY(1px)}
+
+/* Мобильный режим: приглашение сверху, форма ниже в одну колонку. */
+@media (max-width:759.98px){
+  .rform{position:relative;inset:auto;min-height:100vh;min-height:100dvh;padding-bottom:24px}
+
+  .rform__intro{position:static;width:auto;gap:12px;padding:18px 16px 0}
+  .rform__kicker{font-size:15px;letter-spacing:.1em}
+  .rform__title{font-size:28px}
+  .rform__lead{font-size:16px}
+  .rform__notes{gap:8px;margin-top:2px}
+  .rform__note,
+  .rform__note-num{font-size:15px}
+
+  .rform__card,
+  .thanks{position:static;margin:16px 16px 0}
+  .rform__card{gap:16px;padding:20px 16px}
+  .rform__summary{font-size:15px}
+  .rform__grid{grid-template-columns:minmax(0,1fr);gap:4px}
+  .rform__col{gap:4px}
+  .field__label{font-size:15px}
+  .field__error{min-height:20px;font-size:15px}
+  /* 16 px и больше — иначе iPhone увеличивает страницу при вводе. */
+  .field__input{height:50px;font-size:16px}
+  .select__arrow{top:16px}
+  .field__area{min-height:180px}
+  .field__count{font-size:15px}
+  .drop{min-height:72px;padding:0 12px;font-size:15px;text-align:left}
+  .attached{min-height:72px}
+  .attached__name,
+  .attached__note{font-size:15px}
+  .attached__clear{width:44px;height:44px}
+
+  .rform__bottom{flex-direction:column;align-items:stretch;gap:16px}
+  .agree__btn{min-height:44px}
+  .agree__text{font-size:15px}
+  .rform__submit{height:56px;justify-content:center;font-size:18px}
+  .rform__submit:hover{transform:none}
+
+  .thanks{gap:16px;padding:32px 20px}
+  .thanks__badge{width:88px;height:88px}
+  .thanks__title{font-size:36px}
+  .thanks__sub{font-size:20px}
+  .thanks__text{font-size:16px}
+  .thanks__actions{flex-direction:column;align-self:stretch;gap:10px}
+  .thanks__primary,
+  .thanks__again{height:52px;justify-content:center;font-size:17px}
+}
