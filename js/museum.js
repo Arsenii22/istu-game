@@ -10,6 +10,7 @@ window.Museum = (function () {
   var hall = 0;
   var ex = 0;
   var onExhibit = false;
+  var hallScroll = 0;   /* мобильный режим: где была страница зала до открытия экспоната */
 
   function pad(n) { return String(n).padStart(2, '0'); }
   function halls() { return window.MUSEUM_DATA; }
@@ -46,7 +47,9 @@ window.Museum = (function () {
       box.appendChild(frag);
     });
     var active = box.querySelector('.is-active');
-    if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    /* В мобильном режиме scrollIntoView сдвинул бы и страницу; ленту прокручиваем сами. */
+    if (active && Screens.isMobile()) Screens.centerIn(box, active);
+    else if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
   function renderPanel() {
@@ -153,7 +156,12 @@ window.Museum = (function () {
   function showExhibit(i) {
     ex = i;
     onExhibit = true;
+    hallScroll = window.scrollY;
     root.replaceChildren(Screens.clone('tpl-museum-exhibit'));
+    if (Screens.isMobile()) {
+      window.scrollTo(0, 0);
+      Screens.swipe(root.querySelector('.exhibit__stage'), stepExhibit);
+    }
     renderExhibit();
     if (hooks.open) hooks.open();
   }
@@ -168,6 +176,7 @@ window.Museum = (function () {
 
   function backToHall() {
     showHall();
+    if (Screens.isMobile()) window.scrollTo(0, hallScroll);
     if (hooks.close) hooks.close();
   }
 
