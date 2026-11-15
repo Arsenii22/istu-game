@@ -497,3 +497,118 @@
   box-shadow:0 0 0 5px var(--c-glow), 0 12px 26px rgba(10,102,255,.3);
 }
 .round--primary:disabled{border-color:var(--c-blue);background:var(--c-blue)}
+
+
+/* Мобильный режим (окно уже 760 px): сцена во всю ширину, обычная прокрутка, одна колонка.
+   Текст не мельче 15 px, кнопки не ниже 44 px. Секции дописывают свои правила в своих файлах. */
+
+@media (max-width:759.98px){
+  .app{position:relative;inset:auto;min-height:100vh;min-height:100dvh;overflow:visible;background:var(--c-bg)}
+  .stage{
+    position:relative;
+    left:auto;
+    top:auto;
+    width:auto;
+    height:auto;
+    min-height:100vh;
+    min-height:100dvh;
+    transform:none;
+    overflow:visible;
+    border-radius:0;
+    box-shadow:none;
+  }
+  /* Фон стоит на месте, страница едет поверх. */
+  .bg{position:fixed}
+  .bg__layer{transition:none}
+  .bg__code{display:none}
+
+  .loading{position:fixed;gap:36px;padding:16px}
+  .loading__logo{width:140px;height:140px}
+  .loading__bar{width:100%;max-width:340px}
+  .loading__row{font-size:15px}
+
+  .menu{
+    position:relative;
+    inset:auto;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:flex-start;
+    gap:28px;
+    padding:76px 16px 8px;
+  }
+  .menu__brand{width:auto;align-items:center;text-align:center;gap:14px}
+  .menu__mark{height:96px}
+  .menu__title{font-size:min(44px, 11vw);padding-bottom:4px}
+  .menu__tagline{font-size:16px;line-height:1.4}
+  .menu__modes{gap:10px}
+  .mode{
+    width:auto;
+    height:auto;
+    min-height:76px;
+    gap:14px;
+    padding:12px 16px;
+    border-radius:14px;
+  }
+  .mode:hover{transform:none}
+  .mode__num{font-size:15px}
+  .mode__icon{width:40px;height:40px}
+  .mode__text{gap:2px}
+  .mode__title{font-size:20px;white-space:normal}
+  .mode__desc{font-size:15px;line-height:1.35;white-space:normal}
+  .mode__arrow{width:22px;height:22px}
+
+  .footer{position:relative;left:auto;bottom:auto;gap:12px;padding:24px 16px 28px}
+  .footer__logo{width:44px;height:44px;flex:none}
+  .footer__text{font-size:15px;max-width:none}
+
+  .stub{position:relative;inset:auto;min-height:100vh;min-height:100dvh;padding:76px 16px 24px}
+  .stub__card{gap:18px;padding:28px 20px 24px;border-radius:16px}
+  .stub__badge{font-size:15px;padding:8px 14px}
+  .stub__title{font-size:30px}
+  .stub__text{font-size:17px}
+  .btn-back{margin-top:4px;height:52px;padding:0 22px 0 18px;gap:10px;font-size:17px}
+  .btn-back__icon{width:22px;height:22px}
+
+  /* «Об игре» и «Звук» — в правом верхнем углу страницы, над брендом. */
+  .corner{top:16px;right:16px;gap:8px}
+  .corner__btn{height:44px;padding:0 14px 0 10px;gap:8px;font-size:15px;border-radius:10px}
+  .corner__btn:hover{transform:none}
+  .corner__icon{width:22px;height:22px}
+
+  .about{position:fixed;padding:16px;align-items:flex-end}
+  .about__dialog{gap:16px;padding:26px 20px 20px;max-height:100%;overflow-y:auto}
+  .about__title{font-size:28px}
+  .about__text{font-size:16px}
+  .about__ok{align-self:stretch;height:52px;margin-top:4px;font-size:17px}
+
+  /* Шапка разделов прилипает к верху экрана. Подпись «Назад в меню» остаётся для скринридера,
+     на экране — одна стрелка. */
+  .head{
+    position:sticky;
+    left:auto;
+    right:auto;
+    top:0;
+    gap:10px;
+    padding:10px 16px;
+    background:color-mix(in srgb, var(--c-bg) 92%, transparent);
+    backdrop-filter:blur(6px);
+    border-bottom:1.5px solid var(--c-line);
+  }
+  .head__kicker{display:none}
+  .head__title{font-size:18px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .head__mark{height:36px}
+  .chip{height:44px;min-width:44px;padding:0 14px;gap:8px;font-size:15px}
+  .chip:hover{transform:none}
+  .chip--plain{padding:0 14px}
+  .chip[data-go="menu"] .chip__icon + span{
+    position:absolute;
+    width:1px;
+    height:1px;
+    overflow:hidden;
+    clip-path:inset(50%);
+    white-space:nowrap;
+  }
+  .chip[data-go="menu"]{width:44px;padding:0;justify-content:center}
+  .round{width:44px;height:44px}
+  .round--lg{width:52px;height:52px}
+}

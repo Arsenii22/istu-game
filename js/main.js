@@ -103,8 +103,11 @@
     },
   };
 
+  var lastMode = null;   /* раздел заглушки «Скоро» — чтобы открыть её заново */
+
   function openMode(mode) {
     blip(880, 0.1);
+    lastMode = mode;
     if (SECTIONS[mode]) SECTIONS[mode]();
     else show('stub', mode);
   }
@@ -152,6 +155,8 @@
   /* mouseover, в отличие от mouseenter, всплывает; отсеиваем перемещения внутри кнопки. */
   var HOVER_SELECTOR = '.mode, #btn-back, #btn-about, #btn-about-ok, .chip, .round, .viewer__all, .pair__btn, .btn-write, .feed__more-btn, .rform__submit, .thanks__primary, .thanks__again, .tree-stage, .tree-label, .tree-card__row, .tree-focus__nav, .tree-detail__thumb, .tree-link, .tree-today__link, .tree-event.is-linked, .tree-menu__item';
   document.addEventListener('mouseover', function (e) {
+    /* На телефоне mouseover приходит вместе с касанием — второй писк был бы лишним. */
+    if (S.isMobile()) return;
     var el = e.target.closest(HOVER_SELECTOR);
     if (!el) return;
     if (e.relatedTarget && el.contains(e.relatedTarget)) return;
@@ -160,6 +165,17 @@
 
   window.addEventListener('resize', function () {
     S.applyLayout();
+  });
+
+  /* Окно перешло через границу 760 px (поворот телефона, изменение размера): разделы
+     раскладываются по-разному, поэтому текущий экран открываем заново. */
+  S.onModeChange(function () {
+    var screen = S.currentScreen();
+    S.applyLayout();
+    if (screen === 'loading') return;
+    if (S.isAboutOpen()) S.closeAbout();
+    if (screen === 'menu' || screen === 'stub' || !SECTIONS[screen]) { show(screen, lastMode); return; }
+    SECTIONS[screen](branchSnap ? branchSnap.value : undefined);
   });
 
   window.addEventListener('pointermove', function (e) {

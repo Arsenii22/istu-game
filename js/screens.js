@@ -66,6 +66,10 @@ window.Screens = (function () {
     return frag;
   }
 
+  /* Мобильный режим: окно уже 760 px. Граница та же, что у @media в CSS. */
+  var MOBILE = window.matchMedia('(max-width: 759.98px)');
+  function isMobile() { return MOBILE.matches; }
+
   /* Эти экраны свёрстаны только под альбомную сцену; в портретном окне она просто уменьшается. */
   var LANDSCAPE_ONLY = ['gallery', 'history', 'museum', 'reviews', 'review-form'];
 
@@ -73,6 +77,8 @@ window.Screens = (function () {
   var WITH_CORNER = ['menu', 'stub'];
 
   function applyLayout() {
+    /* В мобильном режиме сцена не масштабируется: размеры задаёт CSS, а не эти переменные. */
+    if (isMobile()) return;
     var vw = window.innerWidth;
     var vh = window.innerHeight;
     var portrait = vw / vh < 0.85 && LANDSCAPE_ONLY.indexOf(current) < 0;
@@ -195,6 +201,7 @@ window.Screens = (function () {
   }
 
   function parallax(nx, ny) {
+    if (isMobile()) return;
     layer1.style.transform = 'translate(' + nx * -14 + 'px, ' + ny * -10 + 'px)';
     layer2.style.transform = 'translate(' + nx * -30 + 'px, ' + ny * -20 + 'px)';
   }
@@ -211,6 +218,8 @@ window.Screens = (function () {
     current = name;
     applyLayout();
     mount('screen-slot', 'tpl-' + name);
+    /* В мобильном режиме прокручивается вся страница: новый экран открываем с начала. */
+    if (isMobile()) window.scrollTo(0, 0);
 
     if (name === 'stub') {
       var T = window.CONFIG.texts;
@@ -243,6 +252,8 @@ window.Screens = (function () {
 
   return {
     applyLayout: applyLayout,
+    isMobile: isMobile,
+    onModeChange: function (fn) { MOBILE.addEventListener('change', fn); },
     buildBackground: buildBackground,
     parallax: parallax,
     show: show,

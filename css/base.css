@@ -27,3 +27,9 @@ button{font:inherit;color:inherit}
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
 }
+
+/* Мобильный режим: окно уже 760 px. Сцена не масштабируется — страница во всю ширину экрана
+   и прокручивается как обычный сайт. Шире 760 px эти правила не действуют. */
+@media (max-width:759.98px){
+  html,body{height:auto;min-height:100%;overflow:visible;background:var(--c-bg)}
+}
