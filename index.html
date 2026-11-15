@@ -50,7 +50,7 @@
 
 <template id="tpl-loading">
   <div class="loading">
-    <img class="loading__logo" data-img="logo" data-alt="logoAlt" alt="">
+    <img class="loading__logo" data-img="logo" data-alt="logoAlt" alt="" width="246" height="246" loading="lazy" decoding="async">
     <div class="loading__bar">
       <div class="loading__track">
         <div class="loading__fill"></div>
@@ -66,7 +66,7 @@
 <template id="tpl-menu">
   <div class="menu">
     <div class="menu__brand">
-      <img class="menu__mark" data-img="mark" data-alt="markAlt" alt="">
+      <img class="menu__mark" data-img="mark" data-alt="markAlt" alt="" width="132" height="150" loading="lazy" decoding="async">
       <h1 class="menu__title" data-text="title"></h1>
       <p class="menu__tagline" data-text="tagline"></p>
     </div>
@@ -155,7 +155,7 @@
   </div>
 
   <div class="footer">
-    <img class="footer__logo" data-img="logo" data-alt="logoAlt" alt="">
+    <img class="footer__logo" data-img="logo" data-alt="logoAlt" alt="" width="246" height="246" loading="lazy" decoding="async">
     <span class="footer__text" data-text="university"></span>
   </div>
 </template>
@@ -195,7 +195,7 @@
         <span class="head__kicker" data-text="galleryFull"></span>
         <span class="head__title" data-text="albumTitle"></span>
       </div>
-      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
+      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="" width="132" height="150" loading="lazy" decoding="async">
     </div>
 
     <div class="tl">
@@ -301,7 +301,7 @@
         <span class="head__kicker" id="viewer-kicker"></span>
         <span class="head__title" data-text="viewerTitle"></span>
       </div>
-      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
+      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="" width="132" height="150" loading="lazy" decoding="async">
     </div>
 
     <div class="viewer__frame" id="viewer-frame"></div>
@@ -368,7 +368,7 @@
         <span class="head__title" data-text="treeTitle"></span>
       </div>
       <span class="tree-hint" data-text="treeHint"></span>
-      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
+      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="" width="132" height="150" loading="lazy" decoding="async">
     </div>
   </div>
 </template>
@@ -490,7 +490,7 @@
 <template id="tpl-tree-detail">
   <div class="tree-detail">
     <button class="tree-detail__thumb" type="button" data-slot="thumb" data-alt-text="treePhotoOpen">
-      <img class="tree-detail__img" data-slot="img" alt="">
+      <img class="tree-detail__img" data-slot="img" alt="" loading="lazy" decoding="async">
     </button>
     <p class="tree-detail__about" data-slot="about"></p>
   </div>
@@ -524,7 +524,7 @@
     <button class="tree-card__close tree-photo__close" type="button" data-alt-text="treeCardClose">
       <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13"></path></svg>
     </button>
-    <img class="tree-photo__img" data-slot="img" alt="">
+    <img class="tree-photo__img" data-slot="img" alt="" loading="lazy" decoding="async">
     <span class="tree-photo__caption" data-slot="caption"></span>
   </div>
 </template>
@@ -553,7 +553,7 @@
         <span class="head__kicker" data-text="museumTitle"></span>
         <span class="head__title" data-text="hallsTitle"></span>
       </div>
-      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
+      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="" width="132" height="150" loading="lazy" decoding="async">
     </div>
 
     <div class="arches" id="arches"></div>
@@ -628,7 +628,7 @@
         <span class="head__kicker" id="exhibit-kicker"></span>
         <span class="head__title" data-text="exhibitTitle"></span>
       </div>
-      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
+      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="" width="132" height="150" loading="lazy" decoding="async">
     </div>
 
     <div class="exhibit__stage">
@@ -687,7 +687,7 @@
         </svg>
         <span data-text="writeReview"></span>
       </button>
-      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
+      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="" width="132" height="150" loading="lazy" decoding="async">
     </div>
 
     <div class="filters">
@@ -743,7 +743,7 @@
         <span data-text="allReviews"></span>
       </button>
       <div class="head__titles"></div>
-      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="">
+      <img class="head__mark" data-img="mark" data-alt="markAlt" alt="" width="132" height="150" loading="lazy" decoding="async">
     </div>
 
     <div class="rform__intro">
@@ -795,7 +795,7 @@
               <input class="drop__input" type="file" accept="image/*" id="rform-file">
             </label>
             <div class="attached" id="rform-attached" hidden>
-              <img class="attached__thumb" id="rform-thumb" alt="">
+              <img class="attached__thumb" id="rform-thumb" alt="" width="60" height="60" loading="lazy" decoding="async">
               <span class="attached__text">
                 <span class="attached__name" id="rform-filename"></span>
                 <span class="attached__note" data-text="photoAttached"></span>
@@ -890,6 +890,7 @@
 <script src="js/data/history.js"></script>
 <script src="js/data/museum.js"></script>
 <script src="js/data/reviews.js"></script>
+<script src="js/data/photos.js"></script>
 <script src="js/screens.js"></script>
 <script src="js/gallery.js"></script>
 <script src="js/history-tree.js"></script>

@@ -68,14 +68,11 @@ window.Gallery = (function () {
     else if (yi >= win + WIN) win = yi - WIN + 1;
   }
 
-  /* Снимок, а если путь пустой — серая заглушка с подписью label. */
-  function putPhoto(el, photo, label) {
+  /* Снимок, а если путь пустой — серая заглушка с подписью label.
+     kind — 'thumb' (альбом, миниатюры) или 'full' (фото крупно), см. Screens.setPhoto. */
+  function putPhoto(el, photo, label, kind) {
     if (photo.src) {
-      var img = document.createElement('img');
-      img.className = 'photo__img';
-      img.src = photo.src;
-      img.alt = photo.caption;
-      el.replaceChildren(img);
+      el.replaceChildren(Screens.photo(photo.src, kind, 'photo__img', photo.caption));
     } else {
       el.classList.add('photo--stub');
       el.textContent = label;
@@ -89,7 +86,7 @@ window.Gallery = (function () {
 
     btn.dataset.yi = yi;
     btn.dataset.index = index;
-    putPhoto(btn, photo, T.photoStub + ' ' + y.year);
+    putPhoto(btn, photo, T.photoStub + ' ' + y.year, 'thumb');
   }
 
   /* Страница pn года yi. parts — «3 разворота» для титульной, total — сколько страниц у года. */
@@ -308,7 +305,7 @@ window.Gallery = (function () {
 
     var frame = v.querySelector('#viewer-frame');
     frame.className = 'viewer__frame';
-    putPhoto(frame, photo, T.photoStub + ' ' + y.year);
+    putPhoto(frame, photo, T.photoStub + ' ' + y.year, 'full');
 
     var thumbs = v.querySelector('#viewer-thumbs');
     thumbs.replaceChildren();
@@ -318,7 +315,7 @@ window.Gallery = (function () {
       b.className = 'thumb' + (i === view.index ? ' is-active' : '');
       b.dataset.index = i;
       b.setAttribute('aria-label', p.caption);
-      putPhoto(b, p, y.year);
+      putPhoto(b, p, y.year, 'thumb');
       thumbs.appendChild(b);
     });
     var active = thumbs.querySelector('.is-active');

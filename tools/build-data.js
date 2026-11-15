@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /* Сборка данных игры из таблиц.
 
-   node tools/build-data.js            читает data-src/*.csv, проверяет и пишет js/data/*.js
+   node tools/build-data.js            обрабатывает фото из photos-src/ (tools/photos.js), затем
+                                       читает data-src/*.csv, проверяет и пишет js/data/*.js
    node tools/build-data.js --export   выгружает текущие js/data/*.js в data-src/*.csv
    node tools/build-data.js --check    проверка «туда-обратно»: выгрузить → собрать →
                                        сравнить с текущими данными (файлы не меняются)
 
-   Только Node, без внешних библиотек. Таблицы читаются с разделителем «;» или «,»
+   Для обработки фото нужна библиотека sharp (npm install один раз), для --export и
+   --check — только Node. Таблицы читаются с разделителем «;» или «,»
    (определяется по строке заголовков), в UTF-8 с BOM или без. Пишутся с BOM и «;» —
    так их правильно открывает русский Excel. Инструкция для участников — docs/как-заполнять.md. */
 
@@ -15,6 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const photos = require('./photos');
 
 const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'data-src');
@@ -31,14 +34,19 @@ const TABLES = {
   reviews: ['имя', 'год', 'направление', 'дата', 'текст', 'фото'],
 };
 
-/* Куда класть фото: в таблице пишется только имя файла, путь достраивается.
-   Если в ячейке уже есть «/», это путь от index.html и он берётся как есть. */
+/* Где лежат оригиналы фото: в таблице пишется только имя файла, папка внутри photos-src/
+   достраивается по разделу. Если в ячейке уже есть «/», это путь внутри photos-src/
+   (начало «assets/» или «photos-src/» тоже понимается). На сайт попадает обработанный
+   WebP по тому же пути в assets/ — см. tools/photos.js. */
 const PHOTO_DIR = {
-  events: () => 'assets/history/',
-  gallery: (row) => 'assets/gallery/' + row.get('год') + '/',
-  exhibits: () => 'assets/museum/',
-  reviews: () => 'assets/reviews/',
+  events: () => 'history/',
+  gallery: (row) => 'gallery/' + row.get('год') + '/',
+  exhibits: () => 'museum/',
+  reviews: () => 'reviews/',
 };
+
+/* Основные фото, на которые ссылаются данные последней сборки, — для js/data/photos.js. */
+let usedPhotos = new Set();
 
 /* У отзыва три варианта фото: нет фото, серая заглушка, снимок. Заглушку обозначает это слово. */
 const STUB = 'заглушка';
@@ -196,16 +204,24 @@ function fileExists(rel) {
 function photo(row, col, table, errors) {
   const v = row.get(col);
   if (v === '') return '';
-  const rel = v.indexOf('/') >= 0 ? v.replace(/^\.?\//, '') : PHOTO_DIR[table](row) + v;
-  const state = fileExists(rel);
-  if (state === 'нет') errors.push(where(row) + 'файл фото не найден: ' + rel);
-  if (state === 'регистр') errors.push(where(row) + 'файл фото ' + rel + ' есть, но большие и маленькие буквы в имени не совпадают — на сайте он не откроется');
-  return rel;
+  const rel = v.indexOf('/') >= 0 ? v.replace(/^\.?\//, '').replace(/^(assets|photos-src)\//, '') : PHOTO_DIR[table](row) + v;
+  const out = photos.outputs(rel).full;
+  const state = fileExists('photos-src/' + rel);
+  if (state === 'регистр') {
+    errors.push(where(row) + 'файл фото photos-src/' + rel + ' есть, но большие и маленькие буквы в имени не совпадают — исправьте имя файла или ячейку');
+  } else if (state === 'нет' && fileExists(out) !== 'есть') {
+    /* Без оригинала можно, если фото уже обработано: его обработал другой участник и оно
+       пришло через git, а photos-src в репозиторий не попадает. */
+    errors.push(where(row) + 'файл фото не найден: photos-src/' + rel);
+  }
+  usedPhotos.add(out);
+  return out;
 }
 
 /* Таблицы → данные */
 
 function build(texts, errors) {
+  usedPhotos = new Set();
   const t = {};
   Object.keys(TABLES).forEach((name) => {
     if (texts[name] === undefined) errors.push('нет файла data-src/' + name + '.csv');
@@ -312,8 +328,21 @@ function build(texts, errors) {
 
 /* Данные → таблицы */
 
+/* Путь обработанного фото → ячейка таблицы: имя оригинала, если фото лежит в папке
+   раздела, иначе путь внутри photos-src. Оригинал ищется по имени без расширения;
+   если его нет на этом компьютере, пишется имя WebP — сборка поймёт и его. */
 function photoName(src, dir) {
-  return src && src.indexOf(dir) === 0 && src.slice(dir.length).indexOf('/') < 0 ? src.slice(dir.length) : src;
+  if (!src) return src;
+  const rel = src.replace(/^assets\//, '');
+  const d = path.posix.dirname(rel) + '/';
+  const stem = path.posix.basename(rel, path.posix.extname(rel));
+  let name = path.posix.basename(rel);
+  const srcDir = path.join(photos.SRC, ...d.split('/'));
+  if (fs.existsSync(srcDir)) {
+    const orig = fs.readdirSync(srcDir).filter((n) => photos.isPhoto(n) && path.parse(n).name === stem);
+    if (orig.length === 1) name = orig[0];
+  }
+  return d === dir ? name : d + name;
 }
 
 function exportTables(d) {
@@ -333,7 +362,7 @@ function exportTables(d) {
 
   rows.gallery = [];
   d.gallery.forEach((y) => y.photos.forEach((p) => {
-    rows.gallery.push([y.year, photoName(p.src, 'assets/gallery/' + y.year + '/'), p.caption, p.direction]);
+    rows.gallery.push([y.year, photoName(p.src, 'gallery/' + y.year + '/'), p.caption, p.direction]);
   }));
 
   rows.halls = d.museum.map((h) => [h.name, h.years, h.about]);
@@ -450,6 +479,19 @@ function renderReviews(r) {
   return out.join('\n');
 }
 
+/* Размеры обработанных фото: сайт ставит их в width/height, чтобы при загрузке ничего не прыгало,
+   и берёт отсюда путь к превью. Фото, которого здесь нет, показывается как есть, без размеров. */
+function renderPhotos(sizes) {
+  const out = ['/* Обработанные фото: основное (до 1600 px) → превью (до 400 px) и размеры в пикселях.\n *\n' + BANNER +
+    ' * Пишется сборкой по фото из таблиц, руками не правится.\n */\n', 'window.PHOTOS_DATA = {'];
+  Object.keys(sizes).sort().forEach((full) => {
+    const s = sizes[full];
+    out.push('  ' + q(full) + ': { thumb: ' + q(photos.thumbOf(full)) + ', w: ' + s.w + ', h: ' + s.h + ', tw: ' + s.tw + ', th: ' + s.th + ' },');
+  });
+  out.push('};', '');
+  return out.join('\n');
+}
+
 function render(d) {
   return {
     'history.js': renderHistory(d.history),
@@ -500,14 +542,14 @@ function summary(d) {
     d.reviews.length + ' отзывов';
 }
 
-function fail(errors) {
-  console.error('Ошибки в таблицах — js/data не изменён:\n');
+function fail(errors, title) {
+  console.error((title || 'Ошибки в таблицах') + ' — js/data не изменён:\n');
   errors.forEach((e) => console.error('  • ' + e));
   console.error('\nИсправьте и запустите сборку ещё раз.');
   process.exit(1);
 }
 
-function main() {
+async function main() {
   const mode = process.argv[2] || '';
 
   if (mode === '--export') {
@@ -539,6 +581,11 @@ function main() {
     process.exit(1);
   }
 
+  /* Сначала фото: сборка данных проверяет, что каждое фото из таблиц есть. */
+  const ph = await photos.processAll();
+  if (ph.done || ph.skipped) console.log('Фото: обработано ' + ph.done + ', без изменений ' + ph.skipped);
+  if (ph.errors.length) fail(ph.errors, 'Ошибки в фото');
+
   const texts = {};
   const errors = [];
   Object.keys(TABLES).forEach((name) => {
@@ -556,8 +603,9 @@ function main() {
   if (errors.length) fail(errors);
 
   const files = render(data);
+  files['photos.js'] = renderPhotos(await photos.sizesOf(Array.from(usedPhotos).sort(), ph.sizes));
   Object.keys(files).forEach((name) => fs.writeFileSync(path.join(OUT, name), files[name]));
   console.log('Собрано: ' + summary(data));
 }
 
-main();
+main().catch((e) => { console.error(e); process.exit(1); });

@@ -58,11 +58,7 @@ window.Reviews = (function () {
       var photo = slot('photo');
       photo.hidden = false;
       if (r.photo) {
-        var img = document.createElement('img');
-        img.className = 'review__img';
-        img.src = r.photo;
-        img.alt = T.reviewPhoto + ' ' + r.year;
-        photo.appendChild(img);
+        photo.appendChild(Screens.photo(r.photo, 'thumb', 'review__img', T.reviewPhoto + ' ' + r.year));
       } else {
         photo.classList.add('is-stub');
         photo.textContent = T.reviewPhoto + ' ' + r.year;

@@ -16,15 +16,12 @@ window.Museum = (function () {
   function halls() { return window.MUSEUM_DATA; }
   function exCode(h, e) { return (h + 1) + '.' + pad(e + 1); }
 
-  /* Снимок экспоната, а если пути нет — серая заглушка. */
-  function putPhoto(el, x) {
+  /* Снимок экспоната, а если пути нет — серая заглушка. kind — 'thumb' в витрине,
+     'full' на странице экспоната, см. Screens.setPhoto. */
+  function putPhoto(el, x, kind) {
     el.classList.remove('is-stub');
     if (x.photo) {
-      var img = document.createElement('img');
-      img.className = 'glass__img';
-      img.src = x.photo;
-      img.alt = x.name;
-      el.replaceChildren(img);
+      el.replaceChildren(Screens.photo(x.photo, kind, 'glass__img', x.name));
     } else {
       el.classList.add('is-stub');
       el.textContent = T.exhibitStub;
@@ -72,7 +69,7 @@ window.Museum = (function () {
       var frag = Screens.clone('tpl-museum-case');
       var card = frag.firstElementChild;
       card.dataset.ex = i;
-      putPhoto(card.querySelector('[data-slot="photo"]'), x);
+      putPhoto(card.querySelector('[data-slot="photo"]'), x, 'thumb');
       card.querySelector('[data-slot="year"]').textContent = x.year;
       card.querySelector('[data-slot="name"]').textContent = x.name;
       card.querySelector('[data-slot="code"]').textContent = T.exhibitShort + ' ' + exCode(hall, i);
@@ -122,7 +119,7 @@ window.Museum = (function () {
     root.querySelector('#exhibit-name').textContent = x.name;
     root.querySelector('#exhibit-year').textContent = x.year;
     root.querySelector('#exhibit-about').textContent = x.about;
-    putPhoto(root.querySelector('#exhibit-photo'), x);
+    putPhoto(root.querySelector('#exhibit-photo'), x, 'full');
 
     var rows = root.querySelector('#exhibit-rows');
     rows.replaceChildren();
@@ -139,13 +136,7 @@ window.Museum = (function () {
       b.dataset.ex = i;
       b.title = n.name;
       b.setAttribute('aria-label', n.name);
-      if (n.photo) {
-        var img = document.createElement('img');
-        img.className = 'glass__img';
-        img.src = n.photo;
-        img.alt = '';
-        b.appendChild(img);
-      }
+      if (n.photo) b.appendChild(Screens.photo(n.photo, 'thumb', 'glass__img', ''));
       thumbs.appendChild(b);
     });
 

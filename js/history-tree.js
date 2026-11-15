@@ -572,7 +572,7 @@ window.HistoryTree = (function () {
     if (d.photo) {
       thumb.dataset.photo = d.photo;
       thumb.dataset.caption = it[1];
-      frag.querySelector('[data-slot="img"]').src = d.photo;
+      Screens.setPhoto(frag.querySelector('[data-slot="img"]'), d.photo, 'thumb');
     }
     about.hidden = !d.about;
     about.textContent = d.about || '';
@@ -688,7 +688,7 @@ window.HistoryTree = (function () {
   function openPhoto(thumb) {
     var frag = Screens.clone('tpl-tree-photo');
     var img = frag.querySelector('[data-slot="img"]');
-    img.src = thumb.dataset.photo;
+    Screens.setPhoto(img, thumb.dataset.photo, 'full');
     img.alt = thumb.dataset.caption;
     frag.querySelector('[data-slot="caption"]').textContent = thumb.dataset.caption;
     focusEl.appendChild(frag);

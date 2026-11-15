@@ -5,3 +5,5 @@ desktop.ini
 # Настройки редакторов
 .vscode/
 .idea/
+photos-src/
+node_modules/

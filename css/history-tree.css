@@ -448,6 +448,8 @@
 }
 .tree-photo__close{position:absolute;right:40px;top:30px;width:44px;height:44px}
 .tree-photo__img{min-height:0;max-width:100%;max-height:760px;display:block;border-radius:10px;background:var(--c-bg)}
+/* Размеры фото известны (js/data/photos.js): место занято сразу, при загрузке ничего не прыгает. */
+.tree-photo__img[width]{width:min(100%, calc(760px * var(--ar)));height:auto;aspect-ratio:var(--ar)}
 .tree-photo__caption{font-size:20px;font-weight:700;color:var(--c-surface);text-align:center}
 
 .tree-pending{
@@ -621,5 +623,6 @@
   .tree-photo{padding:72px 16px 24px}
   .tree-photo__close{right:16px;top:16px}
   .tree-photo__img{max-height:70vh}
+  .tree-photo__img[width]{width:min(100%, calc(70vh * var(--ar)))}
   .tree-photo__caption{font-size:17px}
 }

@@ -30,6 +30,36 @@ window.Screens = (function () {
     });
   }
 
+  /* Фото из данных. Сборка кладёт рядом с основным фото (до 1600 px) превью (до 400 px), а их
+     размеры пишет в js/data/photos.js. kind: 'thumb' — превью (альбом, миниатюры, списки),
+     'full' — основное (фото крупно). Размеры ставятся в width/height, чтобы место под
+     картинку было занято до загрузки; --ar — соотношение сторон для стилей. Фото, которого
+     нет в js/data/photos.js (путь вписан руками), показывается как есть. */
+  function setPhoto(img, src, kind) {
+    var info = (window.PHOTOS_DATA || {})[src];
+    var thumb = info && kind === 'thumb' && info.thumb && info.tw;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    if (info) {
+      img.width = thumb ? info.tw : info.w;
+      img.height = thumb ? info.th : info.h;
+      img.style.setProperty('--ar', String(info.w / info.h));
+    } else {
+      img.removeAttribute('width');
+      img.removeAttribute('height');
+      img.style.removeProperty('--ar');
+    }
+    img.src = thumb ? info.thumb : src;
+    return img;
+  }
+
+  function photo(src, kind, className, alt) {
+    var img = document.createElement('img');
+    img.className = className;
+    img.alt = alt;
+    return setPhoto(img, src, kind);
+  }
+
   /* Форма слова после числа: forms — ['фотография', 'фотографии', 'фотографий']. */
   function plural(n, forms) {
     var a = n % 100;
@@ -289,6 +319,8 @@ window.Screens = (function () {
     clone: clone,
     checkDirections: checkDirections,
     plural: plural,
+    photo: photo,
+    setPhoto: setPhoto,
     swipe: swipe,
     centerIn: centerIn,
     currentScreen: function () { return current; },
