@@ -84,14 +84,17 @@ window.Reviews = (function () {
       list.length + ' ' + Screens.plural(list.length, T.reviewForms) + ' · ' + T.newestFirst;
   }
 
-  function setFilter(name) {
+  function setFilter(name, silent) {
     if (name === filter) return;
     filter = name;
     shown = PAGE;
     root.querySelector('#feed').scrollTop = 0;
     renderFilters();
     renderFeed();
+    if (silent) return;
     if (hooks.pick) hooks.pick();
+    /* Фильтр — часть адреса (#reviews/it), но не отдельный шаг истории браузера. */
+    if (hooks.nav) hooks.nav('replace');
   }
 
   function onClick(e) {
@@ -134,5 +137,11 @@ window.Reviews = (function () {
     renderFeed();
   }
 
-  return { init: init, latestCards: latestCards };
+  return {
+    init: init,
+    latestCards: latestCards,
+    /* Выбранное направление (title) или null — для адреса страницы. */
+    state: function () { return filter; },
+    set: function (name) { setFilter(name || null, true); },
+  };
 })();

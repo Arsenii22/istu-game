@@ -64,6 +64,15 @@ window.HistoryTree = (function () {
   var mobile = false;
   var menuSheet = null; /* мобильный режим: нижняя панель с меню переходов */
   var cardSheet = null; /* мобильный режим: нижняя панель с карточкой этапа */
+  var silent = false;   /* состояние меняет адрес страницы (set, closeLayer), а не пользователь */
+
+  /* Сообщает main.js об изменениях для адреса и кнопки «Назад» браузера:
+     'push' / 'replace' / 'close' — фокус ветки (#history/it); 'layer' / 'unlayer' —
+     открыли или закрыли фото крупно или нижнюю панель: у них нет своего адреса,
+     но «Назад» сначала закрывает их. */
+  function nav(kind) {
+    if (!silent && hooks.nav) hooks.nav(kind);
+  }
 
   /* Данные */
 
@@ -527,8 +536,11 @@ window.HistoryTree = (function () {
 
   function pickStage(i) {
     var opening = stage !== i;
+    var was = stage;
     stage = opening ? i : null;
     renderCard();
+    if (mobile && was === null) nav('layer');
+    if (mobile && !opening) nav('unlayer');
     if (opening) {
       /* Мобильный режим: карточка в панели снизу, этап поднимаем в верхнюю часть экрана. */
       var top = mobile ? L.nodeY[i] - scroller.clientHeight * 0.25 : L.nodeY[i] - 520;
@@ -541,6 +553,7 @@ window.HistoryTree = (function () {
     stage = null;
     renderCard();
     if (hooks.close) hooks.close();
+    if (mobile) nav('unlayer');
   }
 
   /* Фокус на ветке. Слой лежит поверх дерева, само дерево не трогается —
@@ -630,6 +643,7 @@ window.HistoryTree = (function () {
         row.querySelector('[data-slot="name"]').textContent;
       menuEl.prepend(head);
       menuSheet = sheet(menuEl);
+      nav('layer');
       document.addEventListener('click', onOutsideClick);
       if (byKeyboard) menuEl.querySelector('.tree-menu__item').focus();
       if (hooks.pick) hooks.pick();
@@ -656,12 +670,14 @@ window.HistoryTree = (function () {
 
   function closeMenu() {
     if (!menuEl) return;
+    var wasSheet = !!menuSheet;
     (menuSheet || menuEl).remove();
     menuSheet = null;
     menuRow.classList.remove('is-open');
     menuEl = null;
     menuRow = null;
     document.removeEventListener('click', onOutsideClick);
+    if (wasSheet) nav('unlayer');
   }
 
   /* Поля вокруг сцены: клики внутри раздела разбирает onClick. */
@@ -694,12 +710,14 @@ window.HistoryTree = (function () {
     focusEl.appendChild(frag);
     photoEl = focusEl.querySelector('#tree-photo');
     if (hooks.open) hooks.open();
+    nav('layer');
   }
 
   function closePhoto() {
     photoEl.remove();
     photoEl = null;
     if (hooks.close) hooks.close();
+    nav('unlayer');
   }
 
   function focusCard(title, items, isSub, order) {
@@ -838,7 +856,11 @@ window.HistoryTree = (function () {
     clearTimeout(closeTimer);
     if (focusEl) focusEl.remove();
     setHover(null);
-    if (stage !== null) { stage = null; renderCard(); }
+    if (stage !== null) {
+      stage = null;
+      renderCard();
+      if (mobile) nav('unlayer');
+    }
 
     mountFocus(index, origin);
     focusEl.style.clipPath = circle(0, origin);
@@ -849,6 +871,7 @@ window.HistoryTree = (function () {
       requestAnimationFrame(function () { el.style.clipPath = circle(2000, origin); });
     });
     if (hooks.open) hooks.open();
+    nav('push');
   }
 
   function closeFocus() {
@@ -861,6 +884,7 @@ window.HistoryTree = (function () {
       if (focusEl === el) focusEl = null;
     }, FOCUS_MS);
     if (hooks.close) hooks.close();
+    nav('close');
   }
 
   function stepFocus(delta) {
@@ -870,6 +894,7 @@ window.HistoryTree = (function () {
     focusEl.classList.remove('is-static');
     renderFocus();
     if (hooks.step) hooks.step();
+    nav('replace');
   }
 
   /* Камера: держит фронт роста в окне и плавно поднимается до самого верха. */
@@ -958,6 +983,7 @@ window.HistoryTree = (function () {
 
   /* snap — необязательно: снимок snapshot(), чтобы вернуться в фокус ветки. */
   function init(el, h, snap) {
+    silent = false;
     stopCamera();
     clearTimeout(closeTimer);
     root = el;
@@ -1003,6 +1029,45 @@ window.HistoryTree = (function () {
     else startCamera();
   }
 
+  /* Для адреса страницы: type направления в фокусе или null. */
+  function state() {
+    return focus === null ? null : window.HISTORY_DATA.branches[focus].type;
+  }
+
+  /* Привести дерево к адресу: открыть фокус ветки type или закрыть его (null). */
+  function set(type) {
+    silent = true;
+    closeLayer();
+    var index = window.HISTORY_DATA.branches.findIndex(function (b) { return b.type === type; });
+    if (index < 0) { if (focus !== null) closeFocus(); }
+    else if (focus === null) openFocus(type, null);
+    else if (index !== focus) {
+      focus = index;
+      focusEl.classList.remove('is-static');
+      renderFocus();
+    }
+    silent = false;
+  }
+
+  /* Фото крупно и нижние панели: есть ли открытые и закрыть их — по кнопке «Назад» браузера. */
+  function hasLayer() {
+    return !!(photoEl || menuSheet || cardSheet);
+  }
+
+  function closeLayer() {
+    var was = silent;
+    silent = true;
+    if (photoEl) closePhoto();
+    closeMenu();
+    if (stage !== null) closeCard();
+    silent = was;
+  }
+
+  /* Снимок для возврата на то же место (см. snapshot) или null, если фокус закрыт. */
+  function snap() {
+    return focus === null || !focusEl ? null : snapshot();
+  }
+
   var SCROLL_KEYS = { ArrowUp: -80, ArrowDown: 80, PageUp: -600, PageDown: 600 };
 
   function key(e) {
@@ -1041,5 +1106,5 @@ window.HistoryTree = (function () {
     return false;
   }
 
-  return { init: init, key: key };
+  return { init: init, key: key, state: state, set: set, hasLayer: hasLayer, closeLayer: closeLayer, snapshot: snap };
 })();

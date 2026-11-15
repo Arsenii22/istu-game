@@ -27,6 +27,13 @@ window.Gallery = (function () {
   var pages = [];       /* все страницы альбома подряд: { y, pn } */
   var swiped = 0;       /* время последнего свайпа: клик сразу после него не открывает фото */
   var viewScroll = 0;   /* где была страница до открытия фото */
+  var silent = false;   /* состояние меняет адрес страницы (set), а не пользователь */
+
+  /* Сообщает main.js, что изменилось состояние для адреса: 'push' — новый шаг истории
+     браузера, 'replace' — тот же шаг, 'close' — закрыли то, что открывали. */
+  function nav(kind) {
+    if (!silent && hooks.nav) hooks.nav(kind);
+  }
 
   function pad(n) { return String(n).padStart(2, '0'); }
 
@@ -248,12 +255,16 @@ window.Gallery = (function () {
     renderFoot();
     if (hooks.flip) hooks.flip();
 
-    timer = setTimeout(function () {
-      cur = nx;
-      dir = 0;
-      album.classList.remove('is-turning');
-      renderSpread();
-    }, FLIP_MS);
+    timer = setTimeout(finishFlip, FLIP_MS);
+  }
+
+  function finishFlip() {
+    clearTimeout(timer);
+    cur += dir;
+    dir = 0;
+    root.querySelector('#album').classList.remove('is-turning');
+    renderSpread();
+    nav('replace');
   }
 
   /* Мобильный альбом: одна страница; новая въезжает с той стороны, куда листаем. */
@@ -275,14 +286,16 @@ window.Gallery = (function () {
     cur = nx;
     renderPage(d);
     if (hooks.flip) hooks.flip();
+    nav('replace');
   }
 
   function selectYear(yi) {
-    if (mobile) { cur = firstPageOf(yi); renderPage(0); return; }
+    if (mobile) { cur = firstPageOf(yi); renderPage(0); nav('replace'); return; }
     if (dir) return;
     cur = firstSpreadOf(yi);
     ensureVisible(yi);
     renderSpread();
+    nav('replace');
   }
 
   function shiftWindow(d) {
@@ -336,6 +349,7 @@ window.Gallery = (function () {
     }
     renderView();
     if (hooks.open) hooks.open();
+    nav('push');
   }
 
   function closeView() {
@@ -344,6 +358,7 @@ window.Gallery = (function () {
     root.classList.remove('is-viewing');
     if (mobile) window.scrollTo(0, viewScroll);
     if (hooks.close) hooks.close();
+    nav('close');
   }
 
   /* Внутри года фото листаются по кругу. */
@@ -352,6 +367,7 @@ window.Gallery = (function () {
     view.index = (view.index + d + n) % n;
     renderView();
     if (hooks.step) hooks.step();
+    nav('replace');
   }
 
   function onViewerClick(el) {
@@ -362,6 +378,7 @@ window.Gallery = (function () {
     if (thumb) {
       view.index = Number(thumb.dataset.index);
       renderView();
+      nav('replace');
     }
   }
 
@@ -395,6 +412,7 @@ window.Gallery = (function () {
 
   /* startYear — необязательно: с какого выпуска открыть альбом. */
   function init(el, h, startYear) {
+    silent = false;
     clearTimeout(timer);
     root = el;
     hooks = h || {};
@@ -422,6 +440,40 @@ window.Gallery = (function () {
     renderSpread();
   }
 
+  /* Год альбома (или открытого фото) и номер открытого фото — для адреса страницы. */
+  function yearIndex() {
+    if (view) return view.yi;
+    var p = (mobile ? pages : spreads)[cur];
+    return p ? p.y : 0;
+  }
+
+  function state() {
+    if (!years.length) return { year: null, photo: null };
+    return { year: years[yearIndex()].year, photo: view ? view.index : null };
+  }
+
+  /* Привести галерею к адресу: год альбома и открытое фото (индекс с 0 или null).
+     Неизвестный год — остаётся текущий. Адрес при этом не трогаем. */
+  function set(year, photo) {
+    if (!years.length) return;
+    silent = true;
+    if (dir) finishFlip();
+    var yi = years.findIndex(function (y) { return y.year === year; });
+    if (yi < 0) yi = yearIndex();
+    if (photo === null || photo === undefined) {
+      if (view) closeView();
+      if (yi !== yearIndex()) selectYear(yi);
+    } else {
+      var index = Math.max(0, Math.min(years[yi].photos.length - 1, photo));
+      if (view) { view = { yi: yi, index: index }; renderView(); }
+      else {
+        if (yi !== yearIndex()) selectYear(yi);
+        openView(yi, index);
+      }
+    }
+    silent = false;
+  }
+
   /* Возвращает true, если клавиша обработана здесь. Escape при открытом фото ведёт к альбому, а не в меню. */
   function key(e) {
     var d = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
@@ -434,5 +486,5 @@ window.Gallery = (function () {
     return false;
   }
 
-  return { init: init, key: key, nearestYear: nearestYear };
+  return { init: init, key: key, nearestYear: nearestYear, state: state, set: set };
 })();

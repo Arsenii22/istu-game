@@ -11,6 +11,13 @@ window.Museum = (function () {
   var ex = 0;
   var onExhibit = false;
   var hallScroll = 0;   /* мобильный режим: где была страница зала до открытия экспоната */
+  var silent = false;   /* состояние меняет адрес страницы (set), а не пользователь */
+
+  /* Сообщает main.js, что изменилось состояние для адреса: 'push' — новый шаг истории
+     браузера, 'replace' — тот же шаг, 'close' — закрыли то, что открывали. */
+  function nav(kind) {
+    if (!silent && hooks.nav) hooks.nav(kind);
+  }
 
   function pad(n) { return String(n).padStart(2, '0'); }
   function halls() { return window.MUSEUM_DATA; }
@@ -94,6 +101,7 @@ window.Museum = (function () {
     hall = i;
     renderHall();
     if (hooks.pick) hooks.pick();
+    nav('replace');
   }
 
   /* Экспонат */
@@ -155,6 +163,7 @@ window.Museum = (function () {
     }
     renderExhibit();
     if (hooks.open) hooks.open();
+    nav('push');
   }
 
   function stepExhibit(d) {
@@ -163,12 +172,14 @@ window.Museum = (function () {
     ex = i;
     renderExhibit();
     if (hooks.step) hooks.step();
+    nav('replace');
   }
 
   function backToHall() {
     showHall();
     if (Screens.isMobile()) window.scrollTo(0, hallScroll);
     if (hooks.close) hooks.close();
+    nav('close');
   }
 
   function onClick(e) {
@@ -179,7 +190,7 @@ window.Museum = (function () {
       if (el.closest('#exhibit-prev')) { stepExhibit(-1); return; }
       if (el.closest('#exhibit-next')) { stepExhibit(1); return; }
       var nb = el.closest('.neighbour');
-      if (nb) { ex = Number(nb.dataset.ex); renderExhibit(); }
+      if (nb) { ex = Number(nb.dataset.ex); renderExhibit(); nav('replace'); }
       return;
     }
 
@@ -212,12 +223,37 @@ window.Museum = (function () {
 
   /* startHall — необязательно: индекс зала, который открыть. */
   function init(el, h, startHall) {
+    silent = false;
     root = el;
     hooks = h || {};
     hall = startHall || 0;
     ex = 0;
     root.addEventListener('click', onClick);
     showHall();
+  }
+
+  /* Зал и открытый экспонат (индексы с 0, экспонат — null) — для адреса страницы. */
+  function state() {
+    return { hall: hall, exhibit: onExhibit ? ex : null };
+  }
+
+  /* Привести музей к адресу. Номера вне диапазона прижимаются к краю. Адрес не трогаем. */
+  function set(h, x) {
+    var n = halls().length;
+    if (!n) return;
+    silent = true;
+    h = Math.max(0, Math.min(n - 1, h || 0));
+    if (x === null || x === undefined) {
+      if (onExhibit) { hall = h; backToHall(); }
+      else goHall(h);
+    } else {
+      hall = h;
+      x = Math.max(0, Math.min(halls()[h].exhibits.length - 1, x));
+      if (x < 0) { if (onExhibit) backToHall(); else showHall(); }
+      else if (onExhibit) { ex = x; renderExhibit(); }
+      else showExhibit(x);
+    }
+    silent = false;
   }
 
   /* Возвращает true, если клавиша обработана здесь. ←/→ листают залы или экспонаты,
@@ -233,5 +269,5 @@ window.Museum = (function () {
     return false;
   }
 
-  return { init: init, key: key, hallForYear: hallForYear };
+  return { init: init, key: key, hallForYear: hallForYear, state: state, set: set };
 })();
